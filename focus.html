@@ -6,24 +6,36 @@ html,body{margin:0;height:100%;background:#191919;font-family:ui-sans-serif,-app
 .card{position:relative;overflow:hidden;border-radius:16px;height:100%;box-sizing:border-box;padding:18px;display:flex;align-items:center;justify-content:center;color:#fff;transition:background .6s}
 .blob{position:absolute;border-radius:50%;filter:blur(55px);opacity:.85;transition:background .6s}
 .b1{width:60%;aspect-ratio:1;right:-15%;top:25%}.b2{width:50%;aspect-ratio:1;left:-15%;bottom:-20%}
-.z{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:12px;width:100%}
-select{appearance:none;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:10px;padding:7px 16px;font-size:14px;backdrop-filter:blur(10px);cursor:pointer;font-family:inherit}
+.z{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:11px;width:100%}
+.top{display:flex;gap:8px;align-items:center}
+select,.ic{appearance:none;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:10px;padding:7px 14px;font-size:14px;backdrop-filter:blur(10px);cursor:pointer;font-family:inherit}
+.ic{padding:7px 10px}.ic.off{opacity:.5}
 select option{color:#000}
-#t{font-size:clamp(44px,16vw,76px);font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 2px 20px rgba(0,0,0,.15)}
-.modes{display:flex;flex-direction:column;gap:8px;align-items:center}
-.pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:999px;padding:8px 22px;font-size:14px;cursor:pointer;backdrop-filter:blur(10px);min-width:140px;font-family:inherit}
+.pb{width:min(70%,240px);height:4px;border-radius:9px;background:rgba(255,255,255,.22);overflow:hidden;margin-top:-4px}.pb i{display:block;height:100%;width:0;background:#fff;border-radius:9px;transition:width .25s linear}
+#t{font-size:clamp(42px,15vw,72px);font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1;text-shadow:0 2px 20px rgba(0,0,0,.15)}
+#ph{font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.85;margin-top:-6px}
+.modes{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.pill{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:999px;padding:7px 16px;font-size:13px;cursor:pointer;backdrop-filter:blur(10px);font-family:inherit}
 .pill.on{background:rgba(255,255,255,.42)}
-.ctl{display:flex;gap:12px;margin-top:4px}
-.ctl button{background:#f6f1e7;color:#2b2b2b;border:none;border-radius:999px;padding:10px 30px;font-size:15px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.12);font-family:inherit}
-#n{font-size:12px;opacity:.85}
+.ctl{display:flex;gap:10px;margin-top:2px}
+.ctl button{background:#f6f1e7;color:#2b2b2b;border:none;border-radius:999px;padding:10px 28px;font-size:15px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.12);font-family:inherit}
+.dots{display:flex;gap:6px;cursor:pointer}
+.dots b{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.25);border:1px solid rgba(255,255,255,.4)}
+.dots b.on{background:#fff}
+#n{font-size:12px;opacity:.85;text-align:center}
 </style></head><body>
 <div class="card" id="card"><div class="blob b1" id="b1"></div><div class="blob b2" id="b2"></div>
 <div class="z">
- <select id="th"><option value="0">🌌 nebula kiss</option><option value="1">🌊 deep ocean</option><option value="2">🌲 forest mist</option><option value="3">🌅 sunset</option><option value="4">🌑 midnight</option></select>
- <div id="t">25:00</div>
- <div class="modes"><button class="pill on" data-m="25">Pomodoro</button><button class="pill" data-m="5">Kurze Pause</button><button class="pill" data-m="15">Lange Pause</button></div>
- <div class="ctl"><button id="go">Start</button><button id="rs">Reset</button></div>
- <div id="n">0 Sessions heute</div>
+ <div class="top">
+  <select id="th"><option value="0">🌌 nebula kiss</option><option value="1">🌊 deep ocean</option><option value="2">🌲 forest mist</option><option value="3">🌅 sunset</option><option value="4">🌑 midnight</option></select>
+  <button class="ic" id="snd" title="Ton an/aus">🔔</button><button class="ic" id="auto" title="Automatisch weiter">🔁</button>
+ </div>
+ <div id="t">25:00</div><div class="pb"><i id="pb"></i></div>
+ <div id="ph">Fokus</div>
+ <div class="modes"><button class="pill on" data-m="f">Pomodoro</button><button class="pill" data-m="s">Kurze Pause</button><button class="pill" data-m="l">Lange Pause</button></div>
+ <div class="ctl"><button id="go">Start</button><button id="rst">Reset</button></div>
+ <div class="dots" id="dots" title="Tagesziel: klicken zum Ändern"></div>
+ <div id="n"></div>
 </div></div>
 <script>
 const TH=[["linear-gradient(135deg,#b9b9bd,#d6d3d1)","#e0464e","#c9c3d8"],["linear-gradient(135deg,#0f2b46,#1e4d73)","#2bb3c0","#3f6ad8"],["linear-gradient(135deg,#25392e,#3f5a47)","#8fbf7a","#2f6b5a"],["linear-gradient(135deg,#f3a26b,#e8746f)","#ffd166","#c94b7c"],["linear-gradient(135deg,#111318,#22252d)","#5b4bdb","#1f8a8a"]];
@@ -31,15 +43,28 @@ const $=i=>document.getElementById(i);
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
 function theme(i){const t=TH[i]||TH[0];$('card').style.background=t[0];$('b1').style.background=t[1];$('b2').style.background=t[2];ls.set('th',i);}
 const sv=+(ls.get('th')||0);$('th').value=sv;theme(sv);$('th').onchange=e=>theme(+e.target.value);
-const today=new Date().toDateString();let cnt=ls.get('day')===today?+(ls.get('cnt')||0):0;
-const showCnt=()=>{$('n').textContent=cnt+(cnt===1?' Session':' Sessions')+' heute';};showCnt();
-let total=1500,left=1500,run=false,iv=null,mode=25;
-const draw=()=>{$('t').textContent=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');};
-function beep(){try{const a=new (window.AudioContext||window.webkitAudioContext)();[0,.3,.6].forEach(s=>{const o=a.createOscillator(),v=a.createGain();o.frequency.value=740;o.connect(v);v.connect(a.destination);v.gain.setValueAtTime(.2,a.currentTime+s);v.gain.exponentialRampToValueAtTime(.001,a.currentTime+s+.25);o.start(a.currentTime+s);o.stop(a.currentTime+s+.25);});}catch(e){}}
+const D={f:25,s:5,l:15},NAME={f:'Fokus',s:'Kurze Pause',l:'Lange Pause'};
+let sound=ls.get('snd')!=='0',auto=ls.get('auto')!=='0',goal=+(ls.get('goal')||4);
+const setIc=()=>{$('snd').textContent=sound?'🔔':'🔕';$('auto').classList.toggle('off',!auto);};setIc();
+$('snd').onclick=()=>{sound=!sound;ls.set('snd',sound?'1':'0');setIc();};
+$('auto').onclick=()=>{auto=!auto;ls.set('auto',auto?'1':'0');setIc();};
+const today=new Date().toDateString();
+let cnt=ls.get('day')===today?+(ls.get('cnt')||0):0,mins=ls.get('day')===today?+(ls.get('mins')||0):0;
+function stats(){const d=$('dots');d.innerHTML='';for(let i=0;i<goal;i++){const b=document.createElement('b');if(i<cnt)b.className='on';d.appendChild(b);}
+ $('n').textContent=cnt+' von '+goal+' Sessions · '+mins+' Min. Fokus heute'+(cnt>=goal?' · Ziel erreicht':'');}
+$('dots').onclick=()=>{goal=goal>=8?2:goal+1;ls.set('goal',goal);stats();};stats();
+let mode='f',total=D.f*60,left=total,run=false,iv=null;
+function ring(){$('pb').style.width=((1-left/total)*100)+'%';}
+const draw=()=>{const t=String(Math.floor(left/60)).padStart(2,'0')+':'+String(left%60).padStart(2,'0');$('t').textContent=t;$('ph').textContent=NAME[mode];document.title=t+' · '+NAME[mode];ring();};
+function beep(){if(!sound)return;try{const a=new (window.AudioContext||window.webkitAudioContext)();[0,.3,.6].forEach(s=>{const o=a.createOscillator(),v=a.createGain();o.frequency.value=mode==='f'?660:880;o.connect(v);v.connect(a.destination);v.gain.setValueAtTime(.2,a.currentTime+s);v.gain.exponentialRampToValueAtTime(.001,a.currentTime+s+.25);o.start(a.currentTime+s);o.stop(a.currentTime+s+.25);});}catch(e){}}
 const stop=()=>{run=false;clearInterval(iv);$('go').textContent='Start';};
-$('go').onclick=()=>{if(run){stop();return;}run=true;$('go').textContent='Pause';const end=Date.now()+left*1000;
- iv=setInterval(()=>{left=Math.max(0,Math.round((end-Date.now())/1000));draw();if(!left){stop();beep();if(mode===25){cnt++;ls.set('cnt',cnt);ls.set('day',today);showCnt();}}},250);};
-$('rs').onclick=()=>{stop();left=total;draw();};
-document.querySelectorAll('.pill').forEach(b=>b.onclick=()=>{stop();document.querySelectorAll('.pill').forEach(x=>x.classList.remove('on'));b.classList.add('on');mode=+b.dataset.m;total=left=mode*60;draw();});
+function setMode(m){mode=m;total=left=D[m]*60;document.querySelectorAll('.pill').forEach(x=>x.classList.toggle('on',x.dataset.m===m));draw();}
+function start(){run=true;$('go').textContent='Pause';const end=Date.now()+left*1000;
+ iv=setInterval(()=>{left=Math.max(0,Math.round((end-Date.now())/1000));draw();if(!left){stop();beep();
+  if(mode==='f'){cnt++;mins+=D.f;ls.set('cnt',cnt);ls.set('mins',mins);ls.set('day',today);stats();setMode(cnt%4===0?'l':'s');}else setMode('f');
+  if(auto)start();}},250);}
+$('go').onclick=()=>run?stop():start();
+$('rst').onclick=()=>{stop();left=total;draw();};
+document.querySelectorAll('.pill').forEach(b=>b.onclick=()=>{stop();setMode(b.dataset.m);});
 draw();
 </script></body></html>
