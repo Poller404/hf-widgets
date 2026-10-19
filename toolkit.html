@@ -108,7 +108,13 @@ input,select{border:1px solid var(--line);background:var(--in);color:var(--txt);
  <div class="term" id="tm-t"></div>
  <div style="margin-bottom:10px"><span class="tag" id="tm-c"></span></div>
  <div class="def" id="tm-x"></div>
- <div class="row"><button class="btn" id="tm-prev">← Zurück</button><button class="btn" id="tm-next">Weiter →</button></div>
+ <div class="row"><button class="btn" id="tm-prev">← Zurück</button><button class="btn" id="tm-next">Weiter →</button><button class="btn p" id="tm-quiz">Quiz starten</button></div>
+ <div id="gq" style="display:none;margin-top:16px;border-top:1px solid var(--line);padding-top:14px">
+  <h3>Welcher Begriff passt zur Beschreibung?</h3>
+  <div class="def" id="gq-q" style="margin-bottom:12px"></div>
+  <div class="opts" id="gq-o"></div>
+  <div class="meta"><span id="gq-info"></span><span id="gq-score"></span></div>
+ </div>
 </section>
 <section id="cmds">
  <h3>Befehle durchsuchen</h3>
@@ -131,7 +137,8 @@ function pnext(){plock=false;pc=P[Math.floor(Math.random()*P.length)];
  const all=sh([pc,...sh(P.filter(p=>p!==pc)).slice(0,3)]);$('pq-o').innerHTML='';
  all.forEach(o=>{const b=document.createElement('button');b.className='opt';b.textContent=pr?o[1]:o[0];b.onclick=()=>{if(plock)return;plock=true;
   if(o===pc){b.classList.add('ok');pok++;pst++;}else{b.classList.add('bad');pst=0;[...$('pq-o').children].forEach(x=>{if(x.textContent===(pr?pc[1]:pc[0]))x.classList.add('ok');});}
-  $('pq-info').textContent=pc[1]+' · Port '+pc[0]+' · '+pc[2];$('pq-score').textContent=pok+' richtig · Serie '+pst;setTimeout(pnext,1400);};$('pq-o').appendChild(b);});}
+  try{if(pst>(+localStorage.getItem('best_pq')||0))localStorage.setItem('best_pq',pst);}catch(e){}
+  $('pq-info').textContent=pc[1]+' · Port '+pc[0]+' · '+pc[2];$('pq-score').textContent=pok+' richtig · Serie '+pst+' · Rekord '+(function(){try{return +localStorage.getItem('best_pq')||0}catch(e){return 0}})();setTimeout(pnext,1400);};$('pq-o').appendChild(b);});}
 $('pq-next').onclick=pnext;$('pq-mode').onclick=()=>{pr=!pr;pnext();};pnext();
 
 /* OSI-Quiz */
@@ -259,6 +266,14 @@ const T=[["CIA-Triade","Grundlagen","Die drei Schutzziele der Informationssicher
 const day=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/864e5),base=day%T.length;let off=0;
 function tshow(){const i=((base+off)%T.length+T.length)%T.length,t=T[i];$('tm-t').textContent=t[0];$('tm-c').textContent=t[1];$('tm-x').textContent=t[2];$('tm-d').textContent=off===0?'Begriff des Tages':'Begriff '+(i+1)+' von '+T.length;}
 $('tm-next').onclick=()=>{off++;tshow();};$('tm-prev').onclick=()=>{off--;tshow();};tshow();
+const LS={get:k=>{try{return +localStorage.getItem(k)||0}catch(e){return 0}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+let gc=null,gok=0,gst=0,glock=false;
+const gScore=()=>{$('gq-score').textContent=gok+' richtig · Serie '+gst+' · Rekord '+LS.get('best_gq');};
+function gnext(){glock=false;gc=T[Math.floor(Math.random()*T.length)];$('gq-q').textContent=gc[2].replace(new RegExp(gc[0].split(/[ (\/]/)[0],'gi'),'…');$('gq-info').textContent='';$('gq-o').innerHTML='';
+ sh([gc,...sh(T.filter(t=>t!==gc)).slice(0,3)]).forEach(o=>{const b=document.createElement('button');b.className='opt';b.textContent=o[0];b.onclick=()=>{if(glock)return;glock=true;
+  if(o===gc){b.classList.add('ok');gok++;gst++;if(gst>LS.get('best_gq'))LS.set('best_gq',gst);}else{b.classList.add('bad');gst=0;[...$('gq-o').children].forEach(x=>{if(x.textContent===gc[0])x.classList.add('ok');});}
+  $('gq-info').textContent=gc[1];gScore();setTimeout(gnext,1600);};$('gq-o').appendChild(b);});gScore();}
+$('tm-quiz').onclick=()=>{const on=$('gq').style.display==='none';$('gq').style.display=on?'block':'none';$('tm-quiz').textContent=on?'Quiz beenden':'Quiz starten';if(on)gnext();};
 
 /* Befehle */
 const CMD=[["ip a","Linux","IP-Adressen und Interfaces anzeigen"],["ip route","Linux","Routing-Tabelle anzeigen"],["ss -tulpn","Linux","Offene Ports mit Prozessen anzeigen"],["sudo -l","Linux","Erlaubte sudo-Befehle des Benutzers anzeigen"],["id","Linux","Benutzer-ID und Gruppen anzeigen"],["whoami","Linux","Aktuellen Benutzer anzeigen"],["chmod 640 datei","Linux","Rechte setzen: Besitzer rw, Gruppe r, andere nichts"],["chown user:gruppe datei","Linux","Besitzer und Gruppe ändern"],["find / -perm -4000 2>/dev/null","Security","SUID-Dateien suchen (Privilege Escalation)"],["grep -ri passwort /etc","Linux","Rekursiv nach Text suchen"],["tail -f /var/log/auth.log","Security","Anmelde-Log live mitlesen"],["journalctl -u ssh","Linux","Logs eines Dienstes anzeigen"],["systemctl status dienst","Linux","Status eines Dienstes anzeigen"],["ps aux","Linux","Alle laufenden Prozesse anzeigen"],["cat /etc/passwd","Linux","Benutzerkonten auflisten"],["sha256sum datei","Security","SHA-256-Hash einer Datei berechnen"],["openssl s_client -connect host:443","Security","TLS-Verbindung und Zertifikat prüfen"],["ssh-keygen -t ed25519","Security","SSH-Schlüsselpaar erzeugen"],["ipconfig /all","Windows","Detaillierte Netzwerkkonfiguration"],["ipconfig /flushdns","Windows","DNS-Cache leeren"],["netstat -ano","Windows","Verbindungen mit Prozess-ID anzeigen"],["tasklist","Windows","Laufende Prozesse auflisten"],["whoami /priv","Windows","Rechte des aktuellen Benutzers anzeigen"],["net user","Windows","Lokale Benutzer auflisten"],["net localgroup administrators","Windows","Mitglieder der lokalen Admin-Gruppe"],["gpresult /r","Windows","Angewendete Gruppenrichtlinien anzeigen"],["Get-NetTCPConnection","Windows","TCP-Verbindungen in PowerShell"],["Get-LocalUser","Windows","Lokale Benutzer in PowerShell"],["Get-FileHash datei","Security","Datei-Hash in PowerShell (Standard SHA-256)"],["Test-NetConnection host -Port 443","Windows","Port-Erreichbarkeit testen"],["ping -c 4 host","Netzwerk","Erreichbarkeit testen (Linux/macOS, Windows: -n)"],["traceroute host","Netzwerk","Route zum Ziel anzeigen (Windows: tracert)"],["nslookup domain","Netzwerk","DNS-Abfrage"],["dig domain MX","Netzwerk","DNS-Abfrage nach bestimmtem Record-Typ"],["arp -a","Netzwerk","ARP-Tabelle anzeigen"],["curl -I https://site","Netzwerk","Nur HTTP-Header abrufen"],["nmap -sn 192.168.1.0/24","Security","Ping-Scan: aktive Hosts finden"],["nmap -sV -p- host","Security","Alle Ports scannen inkl. Dienstversionen"],["nmap -sC -sV host","Security","Standard-Skripte und Versionserkennung"],["nmap -O host","Security","Betriebssystem erkennen"],["tcpdump -i eth0 port 53","Security","DNS-Verkehr mitschneiden"],["nc -lvnp 4444","Security","Netcat-Listener auf Port 4444 starten"],["gobuster dir -u url -w liste","Security","Verzeichnisse einer Webseite enumerieren"],["hydra -l user -P liste ssh://host","Security","Passwort-Brute-Force (nur in Labs)"],["john --wordlist=liste hash.txt","Security","Hashes mit Wortliste knacken (nur in Labs)"]];
