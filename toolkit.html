@@ -42,8 +42,20 @@ input,select{border:1px solid var(--line);background:var(--in);color:var(--txt);
 </style></head><body>
 <div class="wrap">
 <nav id="nav">
- <button data-s="ports" class="on">Port-Quiz</button><button data-s="osi">OSI-Modell</button><button data-s="train">Subnetting-Training</button><button data-s="kry">Krypto</button><button data-s="pw">Passwort-Check</button><button data-s="calc">Subnetzrechner</button><button data-s="chm">chmod</button><button data-s="conv">Konverter</button><button data-s="grade">Notenrechner</button><button data-s="term">Begriff des Tages</button><button data-s="cmds">Befehle</button>
+ <button data-s="mix">Mix-Test</button><button data-s="ports" class="on">Port-Quiz</button><button data-s="osi">OSI-Modell</button><button data-s="train">Subnetting-Training</button><button data-s="kry">Krypto</button><button data-s="pw">Passwort-Check</button><button data-s="calc">Subnetzrechner</button><button data-s="chm">chmod</button><button data-s="conv">Konverter</button><button data-s="grade">Notenrechner</button><button data-s="term">Begriff des Tages</button><button data-s="cmds">Befehle</button>
 </nav>
+<section id="mix">
+ <h3 id="mx-h">Mix-Test: 10 Fragen aus Ports, OSI, Begriffen und Befehlen</h3>
+ <div id="mx-start"><div class="def" style="margin-bottom:12px">Gemischte Fragen wie in einer Prüfung. Am Ende siehst du deine Quote und alle Fehler zum Nachlernen.</div><button class="btn p" id="mx-go">Test starten</button><div class="meta"><span id="mx-best"></span></div></div>
+ <div id="mx-run" style="display:none">
+  <div class="bar" style="height:5px;border-radius:9px;background:var(--in);overflow:hidden;margin-bottom:14px"><i id="mx-bar" style="display:block;height:100%;width:0;background:var(--acc);transition:width .3s"></i></div>
+  <div class="tag" id="mx-cat" style="margin-bottom:8px"></div>
+  <div class="def" id="mx-q" style="font-size:17px;font-weight:600;margin-bottom:12px"></div>
+  <div class="opts" id="mx-o"></div>
+  <div class="meta"><span id="mx-n"></span><span id="mx-s"></span></div>
+ </div>
+ <div id="mx-end" style="display:none"></div>
+</section>
 <section id="ports" class="on">
  <h3 id="pq-h">Welcher Dienst läuft auf diesem Port?</h3>
  <div class="big mono" id="pq-q"></div>
@@ -214,6 +226,28 @@ function pwc(){const p=$('pw-in').value;let pool=0;const sets=[[/[a-z]/,26,'Klei
  $('pw-bar').style.width=Math.min(100,eff/100*100)+'%';$('pw-bar').style.background=lvl[1];
  $('pw-out').innerHTML=p?'<div>Bewertung</div><div style="color:'+lvl[1]+'">'+lvl[0]+(weak?' (bekanntes Muster)':'')+'</div><div>Länge</div><div>'+p.length+' Zeichen</div><div>Zeichensätze</div><div style="font-family:inherit">'+(used.map(s=>s[2]).join(', ')||'–')+'</div><div>Entropie</div><div>~'+Math.round(eff)+' Bit</div><div>Knackzeit</div><div>'+fmt(sec)+'</div>':'';}
 $('pw-in').oninput=pwc;
+
+/* Mix-Test (Generatoren werden nach dem Laden aller Daten aufgerufen) */
+function mkQ(){const k=R(4);
+ if(k===0){const c=P[R(P.length)],d=R(2);return{cat:'Ports',q:d?'Welcher Port gehört zu '+c[1]+'?':'Welcher Dienst läuft auf Port '+c[0]+'?',a:d?c[0]:c[1],o:sh([c,...sh(P.filter(x=>x!==c)).slice(0,3)]).map(x=>d?x[0]:x[1])};}
+ if(k===1){const c=O[R(O.length)];const wrong=sh(L.filter((_,i)=>i!==c[1])).slice(0,3);return{cat:'OSI',q:'Auf welcher OSI-Schicht arbeitet '+c[0]+'?',a:L[c[1]],o:sh([L[c[1]],...wrong])};}
+ if(k===2){const c=T[R(T.length)];return{cat:'Begriffe',q:c[2].replace(new RegExp(c[0].split(/[ (\/]/)[0],'gi'),'…'),a:c[0],o:sh([c,...sh(T.filter(x=>x!==c)).slice(0,3)]).map(x=>x[0])};}
+ const c=CMD[R(CMD.length)];return{cat:'Befehle',q:'Was macht: '+c[0],a:c[2],o:sh([c,...sh(CMD.filter(x=>x!==c)).slice(0,3)]).map(x=>x[2])};}
+let MX=null;
+const mxBest=()=>{let b=0;try{b=+localStorage.getItem('best_mx')||0}catch(e){}$('mx-best').textContent=b?'Bestes Ergebnis: '+b+'/10':'';};mxBest();
+function mxShow(){const q=MX.qs[MX.i];$('mx-bar').style.width=(MX.i/10*100)+'%';$('mx-cat').textContent=q.cat;$('mx-q').textContent=q.q;$('mx-n').textContent='Frage '+(MX.i+1)+' von 10';$('mx-s').textContent=MX.ok+' richtig';$('mx-o').innerHTML='';MX.lock=false;
+ q.o.forEach(t=>{const b=document.createElement('button');b.className='opt';b.textContent=t;b.onclick=()=>{if(MX.lock)return;MX.lock=true;
+  if(t===q.a){b.classList.add('ok');MX.ok++;}else{b.classList.add('bad');MX.wrong.push(q);[...$('mx-o').children].forEach(x=>{if(x.textContent===q.a)x.classList.add('ok');});}
+  setTimeout(()=>{MX.i++;MX.i<10?mxShow():mxEnd();},1200);};$('mx-o').appendChild(b);});}
+function mxEnd(){$('mx-run').style.display='none';const e=$('mx-end');e.style.display='block';
+ try{if(MX.ok>(+localStorage.getItem('best_mx')||0))localStorage.setItem('best_mx',MX.ok);}catch(x){}
+ e.innerHTML='<div class="big">'+MX.ok+'/10</div><div class="def" style="margin-bottom:12px">'+(MX.ok>=9?'Sehr gut, das sitzt.':MX.ok>=7?'Gut. Die Fehler unten nochmals anschauen.':MX.ok>=5?'Solide Basis, aber noch Lücken.':'Hier lohnt sich gezieltes Repetieren.')+'</div>'
+  +(MX.wrong.length?'<h3>Zum Nachlernen</h3><div class="res" style="grid-template-columns:90px 1fr;font-size:13px">'+MX.wrong.map(w=>'<div>'+w.cat+'</div><div style="font-family:inherit">'+(w.cat==='Begriffe'?w.a+': '+w.q:w.q+' → <b>'+w.a+'</b>')+'</div>').join('')+'</div>':'')
+  +'<div class="row"><button class="btn p" id="mx-again">Nochmals</button></div>';
+ $('mx-again').onclick=mxStart;mxBest();}
+function mxQs(){const qs=[],seen=new Set();let g=0;while(qs.length<10&&g++<200){const q=mkQ();if(!seen.has(q.a)){seen.add(q.a);qs.push(q);}}return qs;}
+function mxStart(){MX={qs:mxQs(),i:0,ok:0,wrong:[]};$('mx-start').style.display='none';$('mx-end').style.display='none';$('mx-run').style.display='block';mxShow();}
+$('mx-go').onclick=mxStart;
 
 /* IP-Helfer */
 const ip2n=s=>{const p=s.trim().split('.');if(p.length!==4||p.some(x=>!/^\d+$/.test(x)||+x>255))return null;return p.reduce((a,x)=>a*256+(+x),0)>>>0;};
