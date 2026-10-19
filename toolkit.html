@@ -86,6 +86,8 @@ input,select{border:1px solid var(--line);background:var(--in);color:var(--txt);
  <h3>IPv4-Subnetzrechner</h3>
  <div class="f"><label>Adresse / CIDR</label><input class="mono" id="sc-in" value="192.168.1.130/26"></div>
  <div class="res" id="sc-out"></div>
+ <details style="margin-top:16px"><summary style="cursor:pointer;color:var(--mut);font-size:13px">CIDR-Spickzettel (/8 bis /32)</summary>
+  <div class="list" style="max-height:240px;margin-top:8px"><table id="sc-tab" class="mono" style="width:100%;border-collapse:collapse;font-size:12.5px"></table></div></details>
 </section>
 <section id="conv">
  <h3>Zahlensysteme</h3>
@@ -193,6 +195,7 @@ function calc(){const v=$('sc-in').value.trim().split('/');const ip=ip2n(v[0]);c
  const typ=o1===127?'Loopback':priv?'Privat (RFC 1918)':(o1===169&&o2===254)?'Link-local (APIPA)':(o1===100&&o2>=64&&o2<=127)?'CGNAT (RFC 6598)':'Öffentlich';
  $('sc-out').innerHTML=[['Subnetzmaske',n2ip(s.m)],['Wildcard',n2ip((~s.m)>>>0)],['Netz-ID',n2ip(s.net)+'/'+c],['Broadcast',n2ip(s.bc)],['Erster Host',n2ip(s.first)],['Letzter Host',n2ip(s.last)],['Nutzbare Hosts',s.hosts.toLocaleString('de-CH')],['Klasse',cls],['Typ',typ]].map(r=>'<div>'+r[0]+'</div><div>'+r[1]+'</div>').join('');}
 $('sc-in').oninput=calc;calc();
+$('sc-tab').innerHTML='<tr style="color:var(--mut);text-align:left"><th style="padding:5px">CIDR</th><th>Maske</th><th>Adressen</th><th>Hosts</th></tr>'+Array.from({length:25},(_,i)=>i+8).map(c=>{const a=Math.pow(2,32-c),h=c>=31?(c===32?1:2):a-2;return '<tr style="border-top:1px solid var(--line)"><td style="padding:5px">/'+c+'</td><td>'+n2ip(maskOf(c))+'</td><td>'+a.toLocaleString('de-CH')+'</td><td>'+h.toLocaleString('de-CH')+'</td></tr>';}).join('');
 
 /* Konverter */
 function cv(src){let n=NaN;if(src==='d')n=parseInt($('cv-d').value,10);if(src==='b')n=parseInt($('cv-b').value.replace(/\s/g,''),2);if(src==='h')n=parseInt($('cv-h').value.replace(/^0x/i,''),16);
