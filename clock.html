@@ -9,7 +9,7 @@ html,body{height:100%;background:var(--bg);color:var(--fg);font-family:ui-sans-s
 .w{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:10px}
 svg{width:min(100%,calc(100vh - 90px),240px);aspect-ratio:1;height:auto}
 .t{font-size:clamp(22px,13vw,34px);font-weight:600;letter-spacing:.02em;font-variant-numeric:tabular-nums;line-height:1}
-.d{font-size:12px;color:var(--mut);letter-spacing:.04em;text-transform:uppercase}
+.d{font-size:11px;color:var(--mut);letter-spacing:.05em;text-transform:uppercase;text-align:center;white-space:nowrap}
 </style></head><body><div class="w">
 <svg viewBox="0 0 200 200">
  <g id="ticks"></g>
@@ -31,7 +31,7 @@ const rot=(id,deg)=>document.getElementById(id).setAttribute('transform','rotate
 function tick(){const n=new Date(),s=n.getSeconds()+n.getMilliseconds()/1000,m=n.getMinutes()+s/60,h=(n.getHours()%12)+m/60;
  rot('s',s*6);rot('m',m*6);rot('h',h*30);
  document.getElementById('t').textContent=n.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'});
- document.getElementById('d').textContent=n.toLocaleDateString('de-CH',{weekday:'long',day:'numeric',month:'long'});
+ document.getElementById('d').textContent=n.toLocaleDateString('de-CH',{weekday:'short',day:'numeric',month:'short'});
  requestAnimationFrame(tick);}
 tick();
 </script></body></html>
