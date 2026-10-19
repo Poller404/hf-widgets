@@ -42,7 +42,7 @@ input,select{border:1px solid var(--line);background:var(--in);color:var(--txt);
 </style></head><body>
 <div class="wrap">
 <nav id="nav">
- <button data-s="ports" class="on">Port-Quiz</button><button data-s="osi">OSI-Modell</button><button data-s="train">Subnetting-Training</button><button data-s="calc">Subnetzrechner</button><button data-s="conv">Konverter</button><button data-s="grade">Notenrechner</button><button data-s="term">Begriff des Tages</button><button data-s="cmds">Befehle</button>
+ <button data-s="ports" class="on">Port-Quiz</button><button data-s="osi">OSI-Modell</button><button data-s="train">Subnetting-Training</button><button data-s="kry">Krypto</button><button data-s="pw">Passwort-Check</button><button data-s="calc">Subnetzrechner</button><button data-s="conv">Konverter</button><button data-s="grade">Notenrechner</button><button data-s="term">Begriff des Tages</button><button data-s="cmds">Befehle</button>
 </nav>
 <section id="ports" class="on">
  <h3 id="pq-h">Welcher Dienst läuft auf diesem Port?</h3>
@@ -66,6 +66,21 @@ input,select{border:1px solid var(--line);background:var(--in);color:var(--txt);
  <div class="row"><button class="btn p" id="tr-check">Prüfen</button><button class="btn" id="tr-show">Lösung</button><button class="btn" id="tr-new">Neue Aufgabe</button></div>
  <div class="out" id="tr-out" style="display:none"></div>
  <div class="meta"><span>Bereich /16 bis /30</span><span id="tr-score">0 / 0 gelöst</span></div>
+</section>
+<section id="kry">
+ <h3>Kodieren, Dekodieren, Hashen</h3>
+ <textarea id="ky-in" rows="3" style="width:100%;border:1px solid var(--line);background:var(--in);color:var(--txt);border-radius:8px;padding:9px 10px;font:13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical">Hallo HF</textarea>
+ <div class="row" id="ky-btns"></div>
+ <div class="out mono" id="ky-out" style="word-break:break-all;font-size:13px;min-height:44px"></div>
+ <h3 style="margin-top:16px">Hashes der Eingabe</h3>
+ <div class="res" id="ky-hash" style="grid-template-columns:90px 1fr;word-break:break-all;font-size:12.5px"></div>
+</section>
+<section id="pw">
+ <h3>Wie stark ist ein Passwort?</h3>
+ <input id="pw-in" type="text" autocomplete="off" spellcheck="false" placeholder="Beispiel tippen (wird nirgends gespeichert oder gesendet)">
+ <div class="bar" style="height:8px;border-radius:9px;background:var(--in);border:1px solid var(--line);margin:12px 0;overflow:hidden"><i id="pw-bar" style="display:block;height:100%;width:0;transition:width .2s,background .2s"></i></div>
+ <div class="res" id="pw-out"></div>
+ <div class="meta"><span>Annahme: Offline-Angriff mit 10 Milliarden Versuchen pro Sekunde</span></div>
 </section>
 <section id="calc">
  <h3>IPv4-Subnetzrechner</h3>
@@ -128,6 +143,32 @@ function onext(){olock=false;oc=O[Math.floor(Math.random()*O.length)];$('oq-q').
   if(i===oc[1]){b.classList.add('ok');ook++;ost++;}else{b.classList.add('bad');ost=0;$('oq-o').children[oc[1]].classList.add('ok');}
   $('oq-info').textContent=oc[0]+' → Schicht '+L[oc[1]];$('oq-score').textContent=ook+' richtig · Serie '+ost;setTimeout(onext,1500);};$('oq-o').appendChild(b);});}
 onext();
+
+/* Krypto */
+const enc=new TextEncoder(),dec=new TextDecoder();
+const b64e=s=>{let b='';enc.encode(s).forEach(c=>b+=String.fromCharCode(c));return btoa(b);};
+const b64d=s=>dec.decode(Uint8Array.from(atob(s.trim()),c=>c.charCodeAt(0)));
+const hexe=s=>[...enc.encode(s)].map(b=>b.toString(16).padStart(2,'0')).join(' ');
+const hexd=s=>dec.decode(Uint8Array.from((s.replace(/[^0-9a-f]/gi,'').match(/../g)||[]).map(h=>parseInt(h,16))));
+const rot=s=>s.replace(/[a-z]/gi,c=>{const b=c<='Z'?65:97;return String.fromCharCode((c.charCodeAt(0)-b+13)%26+b);});
+const bine=s=>[...enc.encode(s)].map(b=>b.toString(2).padStart(8,'0')).join(' ');
+const bind=s=>dec.decode(Uint8Array.from((s.replace(/[^01]/g,'').match(/.{8}/g)||[]).map(b=>parseInt(b,2))));
+const OPS=[['Base64 →',b64e],['← Base64',b64d],['Hex →',hexe],['← Hex',hexd],['URL →',encodeURIComponent],['← URL',decodeURIComponent],['ROT13',rot],['Binär →',bine],['← Binär',bind]];
+OPS.forEach(([n,f])=>{const b=document.createElement('button');b.className='btn';b.textContent=n;b.onclick=()=>{try{$('ky-out').textContent=f($('ky-in').value);$('ky-out').style.color='';}catch(e){$('ky-out').textContent='Eingabe passt nicht zu diesem Format';$('ky-out').style.color='var(--bad)';}};$('ky-btns').appendChild(b);});
+const useOut=document.createElement('button');useOut.className='btn';useOut.textContent='↑ Ergebnis übernehmen';useOut.onclick=()=>{$('ky-in').value=$('ky-out').textContent;hashes();};$('ky-btns').appendChild(useOut);
+async function hashes(){const v=$('ky-in').value;if(!(window.crypto&&crypto.subtle)){$('ky-hash').innerHTML='<div>Hinweis</div><div>Hashes nur über https verfügbar</div>';return;}
+ let h='';for(const a of ['SHA-1','SHA-256','SHA-512']){const d=await crypto.subtle.digest(a,enc.encode(v));h+='<div>'+a+'</div><div>'+[...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('')+'</div>';}$('ky-hash').innerHTML=h;}
+$('ky-in').oninput=hashes;hashes();
+
+/* Passwort-Check */
+function pwc(){const p=$('pw-in').value;let pool=0;const sets=[[/[a-z]/,26,'Kleinbuchstaben'],[/[A-Z]/,26,'Grossbuchstaben'],[/[0-9]/,10,'Ziffern'],[/[^a-zA-Z0-9]/,33,'Sonderzeichen']];
+ const used=sets.filter(s=>s[0].test(p));used.forEach(s=>pool+=s[1]);const bits=p.length?p.length*Math.log2(pool||1):0;
+ const weak=/^(passwort|password|123456|qwertz|qwerty|admin|hallo|letmein)/i.test(p)||/(.)\1{2,}/.test(p);const eff=weak?Math.min(bits,20):bits;
+ const sec=Math.pow(2,eff)/2/1e10;const fmt=s=>s<1?'sofort':s<60?Math.round(s)+' Sekunden':s<3600?Math.round(s/60)+' Minuten':s<86400?Math.round(s/3600)+' Stunden':s<31536000?Math.round(s/86400)+' Tage':s<3.15e9?Math.round(s/31536000).toLocaleString('de-CH')+' Jahre':'mehr als 100 Jahre';
+ const lvl=eff<40?['Schwach','var(--bad)']:eff<60?['Mittel','#d9a23a']:eff<80?['Gut','var(--acc)']:['Sehr stark','var(--ok)'];
+ $('pw-bar').style.width=Math.min(100,eff/100*100)+'%';$('pw-bar').style.background=lvl[1];
+ $('pw-out').innerHTML=p?'<div>Bewertung</div><div style="color:'+lvl[1]+'">'+lvl[0]+(weak?' (bekanntes Muster)':'')+'</div><div>Länge</div><div>'+p.length+' Zeichen</div><div>Zeichensätze</div><div style="font-family:inherit">'+(used.map(s=>s[2]).join(', ')||'–')+'</div><div>Entropie</div><div>~'+Math.round(eff)+' Bit</div><div>Knackzeit</div><div>'+fmt(sec)+'</div>':'';}
+$('pw-in').oninput=pwc;
 
 /* IP-Helfer */
 const ip2n=s=>{const p=s.trim().split('.');if(p.length!==4||p.some(x=>!/^\d+$/.test(x)||+x>255))return null;return p.reduce((a,x)=>a*256+(+x),0)>>>0;};
