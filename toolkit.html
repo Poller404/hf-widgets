@@ -66,6 +66,12 @@ input,select{border:1px solid var(--line);background:var(--in);color:var(--txt);
  <div class="row"><button class="btn p" id="tr-check">Prüfen</button><button class="btn" id="tr-show">Lösung</button><button class="btn" id="tr-new">Neue Aufgabe</button></div>
  <div class="out" id="tr-out" style="display:none"></div>
  <div class="meta"><span>Bereich /16 bis /30</span><span id="tr-score">0 / 0 gelöst</span></div>
+ <div style="margin-top:18px;border-top:1px solid var(--line);padding-top:14px">
+  <h3>VLSM-Aufgabe</h3>
+  <div class="def" id="vl-q"></div>
+  <div class="row"><button class="btn p" id="vl-show">Lösung zeigen</button><button class="btn" id="vl-new">Neue VLSM-Aufgabe</button></div>
+  <div id="vl-out" style="display:none;margin-top:12px"></div>
+ </div>
 </section>
 <section id="kry">
  <h3>Kodieren, Dekodieren, Hashen</h3>
@@ -209,6 +215,15 @@ $('tr-check').onclick=()=>{const a=$('tr-n').value.trim()===n2ip(tq.net),b=$('tr
  $('tr-out').style.display='block';$('tr-out').innerHTML=[['Netz-ID',a],['Broadcast',b],['Hosts',h]].map(x=>'<span class="'+(x[1]?'ok-t':'bad-t')+'">'+(x[1]?'✓ ':'✗ ')+x[0]+'</span>').join(' &nbsp; ');$('tr-score').textContent=tok+' / '+ttot+' gelöst';};
 $('tr-show').onclick=()=>{$('tr-out').style.display='block';$('tr-out').innerHTML='<div class="res"><div>Subnetzmaske</div><div>'+n2ip(tq.m)+'</div><div>Netz-ID</div><div>'+n2ip(tq.net)+'</div><div>Broadcast</div><div>'+n2ip(tq.bc)+'</div><div>Hostbereich</div><div>'+n2ip(tq.first)+' – '+n2ip(tq.last)+'</div><div>Nutzbare Hosts</div><div>'+tq.hosts+'</div><div>Blockgrösse</div><div>'+Math.pow(2,32-tq.c)+' Adressen</div></div>';};
 $('tr-new').onclick=tnew;tnew();
+let vq=null;const NAMES=['Verwaltung','Entwicklung','Gäste-WLAN','Server','Drucker','Management','Produktion','VoIP'];
+function vnew(){const base=ip2n('192.168.'+R(256)+'.0'),cnt=3+R(3),names=sh(NAMES.slice()).slice(0,cnt);let req;
+ do{req=names.map(nm=>({nm,h:[2,5,12,20,28,45,60,100][R(8)]}));}while(req.reduce((s,r)=>s+Math.pow(2,Math.ceil(Math.log2(r.h+2))),0)>256);
+ vq={base,req};$('vl-q').innerHTML='Teile das Netz <b class="mono">'+n2ip(base)+'/24</b> mit VLSM auf. Benötigte Hosts: '+req.map(r=>r.nm+' <b>'+r.h+'</b>').join(', ')+'.';$('vl-out').style.display='none';}
+function vshow(){let cur=vq.base;const rows=vq.req.slice().sort((a,b)=>b.h-a.h).map(r=>{const blk=Math.pow(2,Math.max(2,Math.ceil(Math.log2(r.h+2)))),c=32-Math.log2(blk),net=cur;cur+=blk;
+  return '<tr style="border-top:1px solid var(--line)"><td style="padding:5px">'+r.nm+'</td><td>'+r.h+'</td><td>'+n2ip(net)+'/'+c+'</td><td>'+n2ip(maskOf(c))+'</td><td>'+n2ip(net+1)+' – '+n2ip(net+blk-2)+'</td><td>'+n2ip(net+blk-1)+'</td></tr>';});
+ $('vl-out').innerHTML='<div class="def" style="margin-bottom:8px;font-size:13px;color:var(--mut)">Vorgehen: nach Grösse absteigend sortieren, pro Subnetz die kleinste Zweierpotenz ≥ Hosts + 2 wählen, Blöcke lückenlos hintereinander vergeben.</div><div style="overflow-x:auto"><table class="mono" style="border-collapse:collapse;font-size:12.5px;width:100%"><tr style="color:var(--mut);text-align:left"><th style="padding:5px">Subnetz</th><th>Hosts</th><th>Netz</th><th>Maske</th><th>Hostbereich</th><th>Broadcast</th></tr>'+rows.join('')+'</table></div><div class="meta"><span>'+(cur-vq.base>=256?'Netz vollständig belegt':'Frei ab '+n2ip(cur)+' ('+(256-(cur-vq.base))+' Adressen übrig)')+'</span></div>';
+ $('vl-out').style.display='block';}
+$('vl-new').onclick=vnew;$('vl-show').onclick=vshow;vnew();
 
 /* Subnetzrechner */
 function calc(){const v=$('sc-in').value.trim().split('/');const ip=ip2n(v[0]);const c=v[1]===undefined?24:+v[1];
