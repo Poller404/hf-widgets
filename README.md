@@ -8,7 +8,7 @@ Standard ist dunkel, für helles Notion `?theme=light` anhängen.
 | Heute | `today.html` | Analoguhr, Begrüssung, Datum, Kalenderwoche, Fortschritt von Tag, Woche und Jahr |
 | Uhr | `clock.html` | Analoguhr mit Digitalzeit |
 | Fokus-Timer | `focus.html` | Pomodoro mit Auto-Zyklus, Tagesziel, Fokus-Minuten, 5 Farbthemen |
-| Security-Toolkit | `toolkit.html` | Port-Quiz, OSI-Quiz, Subnetting-Training, Krypto, Passwort-Check, Subnetzrechner mit CIDR-Spickzettel, Konverter, Notenrechner, Glossar mit Quiz, Befehlssuche |
+| Security-Toolkit | `toolkit.html` | Port-Quiz, OSI-Quiz, Subnetting-Training, Krypto, Passwort-Check, Subnetzrechner mit CIDR-Spickzettel, chmod-Rechner, Konverter mit Unix-Zeitstempel, Notenrechner, Glossar mit Quiz, Befehlssuche |
 | Whiteboard | `whiteboard.html` | Stift, Marker, Linie, Pfeil, Rechteck, Text, Raster, Export als PNG |
 
 Alle Daten (Rekorde, Whiteboard, Timer-Statistik) bleiben lokal im Browser.
