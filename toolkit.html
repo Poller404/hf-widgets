@@ -78,6 +78,9 @@ input,select{border:1px solid var(--line);background:var(--in);color:var(--txt);
  <textarea id="ky-in" rows="3" style="width:100%;border:1px solid var(--line);background:var(--in);color:var(--txt);border-radius:8px;padding:9px 10px;font:13px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;resize:vertical">Hallo HF</textarea>
  <div class="row" id="ky-btns"></div>
  <div class="out mono" id="ky-out" style="word-break:break-all;font-size:13px;min-height:44px"></div>
+ <h3 style="margin-top:16px">JWT dekodieren</h3>
+ <input class="mono" id="jw-in" placeholder="eyJhbGciOi… (Token einfügen, wird nur lokal gelesen)">
+ <div class="out mono" id="jw-out" style="white-space:pre-wrap;font-size:12.5px;display:none"></div>
  <h3 style="margin-top:16px">Hashes der Eingabe</h3>
  <div class="res" id="ky-hash" style="grid-template-columns:90px 1fr;word-break:break-all;font-size:12.5px"></div>
 </section>
@@ -190,6 +193,15 @@ const useOut=document.createElement('button');useOut.className='btn';useOut.text
 async function hashes(){const v=$('ky-in').value;if(!(window.crypto&&crypto.subtle)){$('ky-hash').innerHTML='<div>Hinweis</div><div>Hashes nur über https verfügbar</div>';return;}
  let h='';for(const a of ['SHA-1','SHA-256','SHA-512']){const d=await crypto.subtle.digest(a,enc.encode(v));h+='<div>'+a+'</div><div>'+[...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,'0')).join('')+'</div>';}$('ky-hash').innerHTML=h;}
 $('ky-in').oninput=hashes;hashes();
+function jwt(){const v=$('jw-in').value.trim(),o=$('jw-out');if(!v){o.style.display='none';return;}o.style.display='block';
+ const p=v.split('.');if(p.length<2){o.textContent='Kein gültiges JWT (erwartet: header.payload.signatur)';return;}
+ const dj=s=>JSON.parse(b64d(s.replace(/-/g,'+').replace(/_/g,'/').padEnd(Math.ceil(s.length/4)*4,'=')));
+ try{const h=dj(p[0]),pl=dj(p[1]);let t='HEADER\n'+JSON.stringify(h,null,2)+'\n\nPAYLOAD\n'+JSON.stringify(pl,null,2);
+  const ts=k=>pl[k]?'\n'+k+': '+new Date(pl[k]*1000).toLocaleString('de-CH'):'';t+='\n'+ts('iat')+ts('nbf')+ts('exp');
+  if(pl.exp)t+='\nStatus: '+(pl.exp*1000<Date.now()?'abgelaufen':'gültig');
+  if(String(h.alg).toLowerCase()==='none')t+='\n\n⚠️ alg "none": Token ist nicht signiert.';
+  t+='\n\nHinweis: Die Signatur wird hier nicht geprüft.';o.textContent=t;}catch(e){o.textContent='Header oder Payload ist kein gültiges Base64url-JSON.';}}
+$('jw-in').oninput=jwt;
 
 /* Passwort-Check */
 function pwc(){const p=$('pw-in').value;let pool=0;const sets=[[/[a-z]/,26,'Kleinbuchstaben'],[/[A-Z]/,26,'Grossbuchstaben'],[/[0-9]/,10,'Ziffern'],[/[^a-zA-Z0-9]/,33,'Sonderzeichen']];
