@@ -64,6 +64,7 @@ function start(){run=true;$('go').textContent='Pause';const end=Date.now()+left*
   if(mode==='f'){cnt++;mins+=D.f;ls.set('cnt',cnt);ls.set('mins',mins);ls.set('day',today);stats();setMode(cnt%4===0?'l':'s');}else setMode('f');
   if(auto)start();}},250);}
 $('go').onclick=()=>run?stop():start();
+addEventListener('keydown',e=>{if(e.code==='Space'&&e.target.tagName!=='SELECT'){e.preventDefault();run?stop():start();}});
 $('rst').onclick=()=>{stop();left=total;draw();};
 document.querySelectorAll('.pill').forEach(b=>b.onclick=()=>{stop();setMode(b.dataset.m);});
 draw();

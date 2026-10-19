@@ -150,7 +150,9 @@ input,select{border:1px solid var(--line);background:var(--in);color:var(--txt);
 <script src="theme.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('section').forEach(s=>s.classList.remove('on'));b.classList.add('on');$(b.dataset.s).classList.add('on');});
+function openTab(id){const b=document.querySelector('#nav button[data-s="'+id+'"]');if(!b)return;document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('section').forEach(s=>s.classList.remove('on'));b.classList.add('on');$(id).classList.add('on');try{localStorage.setItem('tab',id)}catch(e){}}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>openTab(b.dataset.s));
+try{const t=localStorage.getItem('tab');if(t)openTab(t);}catch(e){}
 const sh=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
 
 /* Port-Quiz */
