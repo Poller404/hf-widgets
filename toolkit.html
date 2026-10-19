@@ -42,7 +42,7 @@ input,select{border:1px solid var(--line);background:var(--in);color:var(--txt);
 </style></head><body>
 <div class="wrap">
 <nav id="nav">
- <button data-s="ports" class="on">Port-Quiz</button><button data-s="train">Subnetting-Training</button><button data-s="calc">Subnetzrechner</button><button data-s="conv">Konverter</button><button data-s="grade">Notenrechner</button><button data-s="term">Begriff des Tages</button><button data-s="cmds">Befehle</button>
+ <button data-s="ports" class="on">Port-Quiz</button><button data-s="osi">OSI-Modell</button><button data-s="train">Subnetting-Training</button><button data-s="calc">Subnetzrechner</button><button data-s="conv">Konverter</button><button data-s="grade">Notenrechner</button><button data-s="term">Begriff des Tages</button><button data-s="cmds">Befehle</button>
 </nav>
 <section id="ports" class="on">
  <h3 id="pq-h">Welcher Dienst läuft auf diesem Port?</h3>
@@ -50,6 +50,14 @@ input,select{border:1px solid var(--line);background:var(--in);color:var(--txt);
  <div class="opts" id="pq-o"></div>
  <div class="row"><button class="btn" id="pq-mode">Richtung wechseln</button><button class="btn" id="pq-next">Nächste Frage</button></div>
  <div class="meta"><span id="pq-info"></span><span id="pq-score">0 richtig · Serie 0</span></div>
+</section>
+<section id="osi">
+ <h3>Auf welcher OSI-Schicht arbeitet das?</h3>
+ <div class="big" id="oq-q" style="font-size:30px"></div>
+ <div class="opts" id="oq-o" style="grid-template-columns:repeat(auto-fill,minmax(150px,1fr))"></div>
+ <div class="meta"><span id="oq-info"></span><span id="oq-score">0 richtig · Serie 0</span></div>
+ <details style="margin-top:14px"><summary style="cursor:pointer;color:var(--mut);font-size:13px">Übersicht der 7 Schichten</summary>
+  <div class="res" id="oq-ref" style="margin-top:10px;grid-template-columns:150px 1fr"></div></details>
 </section>
 <section id="train">
  <h3>Berechne Netz-ID, Broadcast und nutzbare Hosts</h3>
@@ -108,6 +116,18 @@ function pnext(){plock=false;pc=P[Math.floor(Math.random()*P.length)];
   if(o===pc){b.classList.add('ok');pok++;pst++;}else{b.classList.add('bad');pst=0;[...$('pq-o').children].forEach(x=>{if(x.textContent===(pr?pc[1]:pc[0]))x.classList.add('ok');});}
   $('pq-info').textContent=pc[1]+' · Port '+pc[0]+' · '+pc[2];$('pq-score').textContent=pok+' richtig · Serie '+pst;setTimeout(pnext,1400);};$('pq-o').appendChild(b);});}
 $('pq-next').onclick=pnext;$('pq-mode').onclick=()=>{pr=!pr;pnext();};pnext();
+
+/* OSI-Quiz */
+const L=["1 · Bitübertragung","2 · Sicherung","3 · Vermittlung","4 · Transport","5 · Sitzung","6 · Darstellung","7 · Anwendung"];
+const LD=["Bits, Kabel, Funk, Stecker, Signale","Frames, MAC-Adressen, Switching","Pakete, IP-Adressen, Routing","Segmente, Ports, Zuverlässigkeit (TCP/UDP)","Aufbau und Verwaltung von Sitzungen","Kodierung, Kompression, Verschlüsselung","Dienste für Anwendungen (HTTP, DNS, …)"];
+const O=[["Hub",0],["Repeater",0],["Glasfaserkabel",0],["Ethernet-Frame",1],["Switch",1],["MAC-Adresse",1],["ARP",1],["VLAN (802.1Q)",1],["PPP",1],["Router",2],["IPv4 / IPv6",2],["ICMP",2],["IPsec",2],["OSPF",2],["TCP",3],["UDP",3],["Portnummern",3],["NetBIOS",4],["RPC",4],["JPEG / ASCII",5],["MIME",5],["HTTP",6],["DNS",6],["SMTP",6],["SSH",6],["FTP",6],["DHCP",6],["SNMP",6]];
+let oc=null,ook=0,ost=0,olock=false;
+$('oq-ref').innerHTML=L.map((l,i)=>'<div>'+l+'</div><div style="font-family:inherit">'+LD[i]+'</div>').reverse().join('');
+function onext(){olock=false;oc=O[Math.floor(Math.random()*O.length)];$('oq-q').textContent=oc[0];$('oq-info').textContent='';$('oq-o').innerHTML='';
+ L.forEach((l,i)=>{const b=document.createElement('button');b.className='opt';b.textContent=l;b.onclick=()=>{if(olock)return;olock=true;
+  if(i===oc[1]){b.classList.add('ok');ook++;ost++;}else{b.classList.add('bad');ost=0;$('oq-o').children[oc[1]].classList.add('ok');}
+  $('oq-info').textContent=oc[0]+' → Schicht '+L[oc[1]];$('oq-score').textContent=ook+' richtig · Serie '+ost;setTimeout(onext,1500);};$('oq-o').appendChild(b);});}
+onext();
 
 /* IP-Helfer */
 const ip2n=s=>{const p=s.trim().split('.');if(p.length!==4||p.some(x=>!/^\d+$/.test(x)||+x>255))return null;return p.reduce((a,x)=>a*256+(+x),0)>>>0;};

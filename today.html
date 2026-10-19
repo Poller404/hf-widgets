@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Heute</title>
+<style>
+:root{--bg:#191919;--card:#202020;--line:#2c2c2c;--fg:rgba(255,255,255,.9);--mut:rgba(255,255,255,.42);--acc:#e16259;--b1:#529cca;--b2:#4dab9a;--b3:#d9a23a}
+:root[data-theme=light]{--bg:#ffffff;--card:#f7f7f5;--line:#ebebea;--fg:#37352f;--mut:rgba(55,53,47,.5)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden}
+.w{height:100%;display:flex;align-items:center;gap:18px;padding:14px 16px}
+svg{flex:none;width:min(42vw,calc(100vh - 28px),150px);aspect-ratio:1;height:auto}
+.r{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.g{font-size:12px;color:var(--mut);letter-spacing:.04em;text-transform:uppercase}
+.t{font-size:clamp(26px,9vw,38px);font-weight:650;line-height:1.05;font-variant-numeric:tabular-nums}
+.d{font-size:13px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bars{margin-top:8px;display:grid;gap:6px}
+.row{display:grid;grid-template-columns:44px 1fr 34px;align-items:center;gap:8px;font-size:11px;color:var(--mut)}
+.row span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.bar{height:5px;border-radius:9px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:9px}
+@media(max-width:300px){.w{flex-direction:column;justify-content:center;gap:10px}.r{align-items:center;text-align:center;width:100%}.bars{width:100%}}
+</style></head><body><div class="w">
+<svg viewBox="0 0 200 200">
+ <g id="ticks"></g>
+ <line id="h" x1="100" y1="100" x2="100" y2="58" stroke="var(--fg)" stroke-width="5" stroke-linecap="round"/>
+ <line id="m" x1="100" y1="100" x2="100" y2="30" stroke="var(--fg)" stroke-width="3" stroke-linecap="round"/>
+ <line id="s" x1="100" y1="116" x2="100" y2="24" stroke="var(--acc)" stroke-width="1.4" stroke-linecap="round"/>
+ <circle cx="100" cy="100" r="5" fill="var(--acc)"/>
+</svg>
+<div class="r">
+ <div class="g" id="g"></div>
+ <div class="t" id="t">--:--</div>
+ <div class="d" id="d"></div>
+ <div class="bars">
+  <div class="row"><span>Tag</span><div class="bar"><i id="bd" style="background:var(--b1)"></i></div><span id="pd"></span></div>
+  <div class="row"><span>Woche</span><div class="bar"><i id="bw" style="background:var(--b2)"></i></div><span id="pw"></span></div>
+  <div class="row"><span>Jahr</span><div class="bar"><i id="by" style="background:var(--b3)"></i></div><span id="py"></span></div>
+ </div>
+</div></div>
+<script src="theme.js"></script>
+<script>
+const $=i=>document.getElementById(i),NS='http://www.w3.org/2000/svg';
+for(let i=0;i<60;i++){const a=i*Math.PI/30,big=i%5===0,l=document.createElementNS(NS,'line'),r1=big?80:87;
+ l.setAttribute('x1',100+r1*Math.sin(a));l.setAttribute('y1',100-r1*Math.cos(a));l.setAttribute('x2',100+93*Math.sin(a));l.setAttribute('y2',100-93*Math.cos(a));
+ l.setAttribute('stroke',big?'var(--fg)':'var(--mut)');l.setAttribute('stroke-width',big?3:1.2);l.setAttribute('stroke-linecap','round');$('ticks').appendChild(l);}
+const rot=(id,d)=>$(id).setAttribute('transform','rotate('+d+' 100 100)');
+function kw(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);return Math.ceil(((t-new Date(Date.UTC(t.getUTCFullYear(),0,1)))/864e5+1)/7);}
+function bar(b,p,v){$(b).style.width=v.toFixed(1)+'%';$(p).textContent=Math.floor(v)+'%';}
+function tick(){const n=new Date(),s=n.getSeconds()+n.getMilliseconds()/1000,m=n.getMinutes()+s/60,h=n.getHours();
+ rot('s',s*6);rot('m',m*6);rot('h',((h%12)+m/60)*30);
+ $('g').textContent=h<5?'Gute Nacht':h<11?'Guten Morgen':h<14?'Mahlzeit':h<18?'Guten Nachmittag':'Guten Abend';
+ $('t').textContent=n.toLocaleTimeString('de-CH',{hour:'2-digit',minute:'2-digit'});
+ $('d').textContent=n.toLocaleDateString('de-CH',{weekday:'long',day:'numeric',month:'long'})+' · KW '+kw(n);
+ const sec=h*3600+n.getMinutes()*60+s;bar('bd','pd',sec/864);
+ bar('bw','pw',(((n.getDay()+6)%7)*86400+sec)/6048);
+ const y0=new Date(n.getFullYear(),0,1),y1=new Date(n.getFullYear()+1,0,1);bar('by','py',(n-y0)/(y1-y0)*100);
+ requestAnimationFrame(tick);}
+tick();
+</script></body></html>
