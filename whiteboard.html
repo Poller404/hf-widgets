@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Whiteboard</title>
+<style>
+html,body{margin:0;height:100%;background:#fff;font-family:ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.bar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:#2a2a2a;border-radius:12px;padding:6px 10px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.bar button{background:transparent;border:none;color:#ddd;font-size:15px;width:30px;height:30px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.bar button.on{background:#444;color:#fff}
+.sw{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent}
+.sw.on{border-color:#fff}
+.sz{border-radius:50%;background:#888;cursor:pointer}.sz.on{background:#fff}
+.sep{width:1px;height:20px;background:#555}
+#save{width:auto;padding:0 12px;background:#2383e2;color:#fff;font-size:11px;font-weight:700;letter-spacing:.05em}
+</style></head><body>
+<canvas id="cv"></canvas>
+<div class="bar">
+ <button id="pen" class="on" title="Stift">✎</button><button id="er" title="Radierer">⌫</button><button id="un" title="Rückgängig">↶</button><button id="cl" title="Alles löschen">🗑</button>
+ <div class="sep"></div><div id="cols" style="display:flex;gap:6px"></div><div class="sep"></div>
+ <div class="sz" data-s="2" style="width:6px;height:6px"></div><div class="sz on" data-s="4" style="width:10px;height:10px"></div><div class="sz" data-s="8" style="width:14px;height:14px"></div>
+ <button id="save">SAVE</button>
+</div>
+<script>
+const cv=document.getElementById('cv'),cx=cv.getContext('2d');let col='#1f1f1f',size=4,erase=false,drawing=false,lx,ly,hist=[];
+const COLS=['#1f1f1f','#e03e3e','#d9a400','#0f7b6c','#2383e2'];
+COLS.forEach((c,i)=>{const d=document.createElement('div');d.className='sw'+(i?'':' on');d.style.background=c;d.onclick=()=>{col=c;erase=false;tool();document.querySelectorAll('.sw').forEach(x=>x.classList.remove('on'));d.classList.add('on');};document.getElementById('cols').appendChild(d);});
+document.querySelectorAll('.sz').forEach(z=>z.onclick=()=>{size=+z.dataset.s;document.querySelectorAll('.sz').forEach(x=>x.classList.remove('on'));z.classList.add('on');});
+function store(){try{localStorage.setItem('wb',cv.toDataURL('image/png'))}catch(e){}}
+function fit(){const snap=document.createElement('canvas');snap.width=cv.width;snap.height=cv.height;if(cv.width)snap.getContext('2d').drawImage(cv,0,0);
+ const r=devicePixelRatio||1;cv.width=innerWidth*r;cv.height=innerHeight*r;cx.setTransform(r,0,0,r,0,0);cx.fillStyle='#fff';cx.fillRect(0,0,innerWidth,innerHeight);
+ if(snap.width)cx.drawImage(snap,0,0,snap.width/r,snap.height/r);}
+fit();try{const s=localStorage.getItem('wb');if(s){const im=new Image();im.onload=()=>cx.drawImage(im,0,0,im.width/(devicePixelRatio||1),im.height/(devicePixelRatio||1));im.src=s;}}catch(e){}
+addEventListener('resize',fit);
+function tool(){document.getElementById('pen').classList.toggle('on',!erase);document.getElementById('er').classList.toggle('on',erase);}
+const pos=e=>{const r=cv.getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top];};
+const snapshot=()=>{hist.push(cx.getImageData(0,0,cv.width,cv.height));if(hist.length>30)hist.shift();};
+cv.onpointerdown=e=>{drawing=true;[lx,ly]=pos(e);snapshot();cv.setPointerCapture(e.pointerId);};
+cv.onpointermove=e=>{if(!drawing)return;const[x,y]=pos(e);cx.strokeStyle=erase?'#fff':col;cx.lineWidth=erase?size*5:size*(e.pointerType==='pen'&&e.pressure?e.pressure*1.6:1);cx.lineCap='round';cx.lineJoin='round';cx.beginPath();cx.moveTo(lx,ly);cx.lineTo(x,y);cx.stroke();lx=x;ly=y;};
+cv.onpointerup=()=>{if(drawing){drawing=false;store();}};
+document.getElementById('pen').onclick=()=>{erase=false;tool();};
+document.getElementById('er').onclick=()=>{erase=true;tool();};
+document.getElementById('un').onclick=()=>{const h=hist.pop();if(h){cx.putImageData(h,0,0);store();}};
+document.getElementById('cl').onclick=()=>{snapshot();cx.fillStyle='#fff';cx.fillRect(0,0,innerWidth,innerHeight);store();};
+document.getElementById('save').onclick=()=>{const a=document.createElement('a');a.download='whiteboard-'+new Date().toISOString().slice(0,10)+'.png';a.href=cv.toDataURL('image/png');a.click();};
+</script></body></html>

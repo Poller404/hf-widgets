@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Uhr</title>
+<style>
+:root{--fg:#ffffffd9;--mut:#ffffff66;--hand2:#e16259}
+:root[data-theme=light]{--fg:#37352f;--mut:#37352f66}
+html,body{margin:0;height:100%;background:transparent;font-family:ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;overflow:hidden}
+.w{display:flex;align-items:center;justify-content:center;height:100%}
+svg{width:min(92vw,92vh);height:min(92vw,92vh)}
+</style></head><body><div class="w">
+<svg viewBox="0 0 200 200">
+ <g id="ticks"></g>
+ <text id="t" x="100" y="128" text-anchor="middle" font-size="14" font-weight="600" fill="var(--fg)" style="font-variant-numeric:tabular-nums">--:--:--</text>
+ <text id="d" x="100" y="143" text-anchor="middle" font-size="9" fill="var(--mut)"></text>
+ <line id="h" x1="100" y1="100" x2="100" y2="56" stroke="var(--fg)" stroke-width="3.2" stroke-linecap="round"/>
+ <line id="m" x1="100" y1="100" x2="100" y2="30" stroke="var(--fg)" stroke-width="2" stroke-linecap="round"/>
+ <line id="s" x1="100" y1="114" x2="100" y2="22" stroke="var(--hand2)" stroke-width="1" stroke-linecap="round"/>
+ <circle cx="100" cy="100" r="3.2" fill="var(--fg)"/>
+</svg></div>
+<script src="theme.js"></script>
+<script>
+const g=document.getElementById('ticks');
+for(let i=0;i<60;i++){const a=i*Math.PI/30,big=i%5===0,r1=big?82:87,r2=92;const l=document.createElementNS('http://www.w3.org/2000/svg','line');
+ l.setAttribute('x1',100+r1*Math.sin(a));l.setAttribute('y1',100-r1*Math.cos(a));l.setAttribute('x2',100+r2*Math.sin(a));l.setAttribute('y2',100-r2*Math.cos(a));
+ l.setAttribute('stroke',big?'var(--fg)':'var(--mut)');l.setAttribute('stroke-width',big?2:.8);l.setAttribute('stroke-linecap','round');g.appendChild(l);}
+const rot=(id,deg)=>document.getElementById(id).setAttribute('transform','rotate('+deg+' 100 100)');
+function tick(){const n=new Date(),s=n.getSeconds()+n.getMilliseconds()/1000,m=n.getMinutes()+s/60,h=(n.getHours()%12)+m/60;
+ rot('s',s*6);rot('m',m*6);rot('h',h*30);
+ document.getElementById('t').textContent=n.toLocaleTimeString('de-CH');
+ document.getElementById('d').textContent=n.toLocaleDateString('de-CH',{weekday:'short',day:'numeric',month:'short'});
+ requestAnimationFrame(tick);}
+tick();
+</script></body></html>

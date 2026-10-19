@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Security-Toolkit</title>
+<style>
+:root{--card:#202020;--in:#2a2a2a;--line:#333;--txt:#e3e3e1;--mut:#8a8a87;--acc:#2383e2;--ok:#4dab9a;--bad:#ff7369;--okbg:#243d30;--badbg:#522e2a}
+:root[data-theme=light]{--card:#f7f7f5;--in:#fff;--line:#e5e5e3;--txt:#2f3437;--mut:#91918e;--ok:#0f7b6c;--bad:#e03e3e;--okbg:#dbeddb;--badbg:#ffe2dd}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:transparent;color:var(--txt);font-family:ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:14px}
+body{padding:2px}
+.wrap{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+nav{display:flex;gap:2px;padding:8px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+nav button{border:none;background:transparent;color:var(--mut);padding:6px 11px;border-radius:7px;cursor:pointer;font-size:13px;white-space:nowrap;font-family:inherit}
+nav button.on{background:var(--in);color:var(--txt);box-shadow:0 0 0 1px var(--line)}
+section{display:none;padding:18px}section.on{display:block}
+h3{font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-bottom:12px;font-weight:600}
+.big{font-size:40px;font-weight:700;letter-spacing:-.02em;margin:4px 0 14px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opt,.btn{border:1px solid var(--line);background:var(--in);color:var(--txt);border-radius:9px;padding:10px 12px;cursor:pointer;font-size:14px;text-align:left;font-family:inherit}
+.btn{display:inline-block;text-align:center;padding:7px 14px}
+.btn.p{background:var(--acc);border-color:var(--acc);color:#fff}
+.opt.ok{background:var(--okbg);border-color:var(--ok)}.opt.bad{background:var(--badbg);border-color:var(--bad)}
+.meta{display:flex;justify-content:space-between;color:var(--mut);font-size:12.5px;margin-top:12px}
+input,select{border:1px solid var(--line);background:var(--in);color:var(--txt);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit;width:100%}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.f{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;align-items:center;margin-bottom:12px}
+.f label{color:var(--mut);font-size:13px}
+.res{display:grid;grid-template-columns:150px 1fr;gap:6px 12px;font-size:13.5px}
+.res div:nth-child(odd){color:var(--mut)}
+.res div:nth-child(even){font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.q{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:24px;font-weight:600;margin:4px 0 14px}
+.ok-t{color:var(--ok)}.bad-t{color:var(--bad)}
+.row{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.term{font-size:26px;font-weight:700;margin:2px 0 8px}
+.def{line-height:1.55;font-size:14.5px}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:var(--in);border:1px solid var(--line);color:var(--mut)}
+.list{max-height:280px;overflow:auto;margin-top:10px;border-top:1px solid var(--line)}
+.cmd{display:grid;grid-template-columns:minmax(150px,40%) 1fr;gap:10px;padding:8px 2px;border-bottom:1px solid var(--line);font-size:13px}
+.cmd code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:12.5px}
+.gr{display:grid;grid-template-columns:1fr 1fr 38px;gap:6px;margin-bottom:6px}
+.out{margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--in);border:1px solid var(--line);font-size:14.5px;line-height:1.6}
+@media(max-width:520px){.f,.res{grid-template-columns:1fr}.opts{grid-template-columns:1fr}}
+</style></head><body>
+<div class="wrap">
+<nav id="nav">
+ <button data-s="ports" class="on">Port-Quiz</button><button data-s="train">Subnetting-Training</button><button data-s="calc">Subnetzrechner</button><button data-s="conv">Konverter</button><button data-s="grade">Notenrechner</button><button data-s="term">Begriff des Tages</button><button data-s="cmds">Befehle</button>
+</nav>
+<section id="ports" class="on">
+ <h3 id="pq-h">Welcher Dienst läuft auf diesem Port?</h3>
+ <div class="big mono" id="pq-q"></div>
+ <div class="opts" id="pq-o"></div>
+ <div class="row"><button class="btn" id="pq-mode">Richtung wechseln</button><button class="btn" id="pq-next">Nächste Frage</button></div>
+ <div class="meta"><span id="pq-info"></span><span id="pq-score">0 richtig · Serie 0</span></div>
+</section>
+<section id="train">
+ <h3>Berechne Netz-ID, Broadcast und nutzbare Hosts</h3>
+ <div class="q" id="tr-q"></div>
+ <div class="f"><label>Netz-ID</label><input class="mono" id="tr-n" placeholder="z.B. 192.168.10.64"><label>Broadcast</label><input class="mono" id="tr-b" placeholder="z.B. 192.168.10.127"><label>Nutzbare Hosts</label><input class="mono" id="tr-h" placeholder="z.B. 62"></div>
+ <div class="row"><button class="btn p" id="tr-check">Prüfen</button><button class="btn" id="tr-show">Lösung</button><button class="btn" id="tr-new">Neue Aufgabe</button></div>
+ <div class="out" id="tr-out" style="display:none"></div>
+ <div class="meta"><span>Bereich /16 bis /30</span><span id="tr-score">0 / 0 gelöst</span></div>
+</section>
+<section id="calc">
+ <h3>IPv4-Subnetzrechner</h3>
+ <div class="f"><label>Adresse / CIDR</label><input class="mono" id="sc-in" value="192.168.1.130/26"></div>
+ <div class="res" id="sc-out"></div>
+</section>
+<section id="conv">
+ <h3>Zahlensysteme</h3>
+ <div class="f"><label>Dezimal</label><input class="mono" id="cv-d" value="192"><label>Binär</label><input class="mono" id="cv-b"><label>Hexadezimal</label><input class="mono" id="cv-h"></div>
+ <h3 style="margin-top:18px">IP-Adresse in Binär</h3>
+ <div class="f"><label>IPv4</label><input class="mono" id="cv-ip" value="10.0.12.5"><label>Binär</label><div class="mono" id="cv-ipb" style="font-size:13px"></div></div>
+</section>
+<section id="grade">
+ <h3>Welche Note brauche ich?</h3>
+ <div class="gr" style="color:var(--mut);font-size:12px"><span>Note</span><span>Gewichtung</span><span></span></div>
+ <div id="gr-rows"></div>
+ <button class="btn" id="gr-add">+ Note</button>
+ <div class="f" style="margin-top:14px"><label>Zielschnitt</label><input type="number" step="0.1" id="gr-t" value="4.5"><label>Gewichtung nächste Prüfung</label><input type="number" step="0.5" id="gr-w" value="1"></div>
+ <div class="out" id="gr-out"></div>
+</section>
+<section id="term">
+ <h3 id="tm-d">Begriff des Tages</h3>
+ <div class="term" id="tm-t"></div>
+ <div style="margin-bottom:10px"><span class="tag" id="tm-c"></span></div>
+ <div class="def" id="tm-x"></div>
+ <div class="row"><button class="btn" id="tm-prev">← Zurück</button><button class="btn" id="tm-next">Weiter →</button></div>
+</section>
+<section id="cmds">
+ <h3>Befehle durchsuchen</h3>
+ <div style="display:grid;grid-template-columns:1fr 150px;gap:8px"><input id="cm-q" placeholder="Suche, z.B. dns, port, user …"><select id="cm-f"><option value="">Alle</option><option>Linux</option><option>Windows</option><option>Netzwerk</option><option>Security</option></select></div>
+ <div class="list" id="cm-l"></div>
+</section>
+</div>
+<script src="theme.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#nav button').forEach(x=>x.classList.remove('on'));document.querySelectorAll('section').forEach(s=>s.classList.remove('on'));b.classList.add('on');$(b.dataset.s).classList.add('on');});
+const sh=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+
+/* Port-Quiz */
+const P=[["20/21","FTP","TCP"],["22","SSH / SFTP","TCP"],["23","Telnet","TCP"],["25","SMTP","TCP"],["53","DNS","TCP/UDP"],["67/68","DHCP","UDP"],["69","TFTP","UDP"],["80","HTTP","TCP"],["88","Kerberos","TCP/UDP"],["110","POP3","TCP"],["123","NTP","UDP"],["137–139","NetBIOS","TCP/UDP"],["143","IMAP","TCP"],["161/162","SNMP","UDP"],["389","LDAP","TCP/UDP"],["443","HTTPS","TCP"],["445","SMB","TCP"],["465","SMTPS","TCP"],["500","IKE (IPsec)","UDP"],["514","Syslog","UDP"],["587","SMTP Submission","TCP"],["636","LDAPS","TCP"],["993","IMAPS","TCP"],["995","POP3S","TCP"],["1194","OpenVPN","UDP"],["1433","MS SQL Server","TCP"],["1812/1813","RADIUS","UDP"],["3306","MySQL","TCP"],["3389","RDP","TCP"],["5060/5061","SIP","TCP/UDP"],["5432","PostgreSQL","TCP"],["5900","VNC","TCP"],["8080","HTTP alternativ","TCP"],["51820","WireGuard","UDP"]];
+let pr=true,pc=null,pok=0,pst=0,plock=false;
+function pnext(){plock=false;pc=P[Math.floor(Math.random()*P.length)];
+ $('pq-h').textContent=pr?'Welcher Dienst läuft auf diesem Port?':'Welcher Port gehört zu diesem Dienst?';
+ $('pq-q').textContent=pr?pc[0]:pc[1];$('pq-info').textContent='';
+ const all=sh([pc,...sh(P.filter(p=>p!==pc)).slice(0,3)]);$('pq-o').innerHTML='';
+ all.forEach(o=>{const b=document.createElement('button');b.className='opt';b.textContent=pr?o[1]:o[0];b.onclick=()=>{if(plock)return;plock=true;
+  if(o===pc){b.classList.add('ok');pok++;pst++;}else{b.classList.add('bad');pst=0;[...$('pq-o').children].forEach(x=>{if(x.textContent===(pr?pc[1]:pc[0]))x.classList.add('ok');});}
+  $('pq-info').textContent=pc[1]+' · Port '+pc[0]+' · '+pc[2];$('pq-score').textContent=pok+' richtig · Serie '+pst;setTimeout(pnext,1400);};$('pq-o').appendChild(b);});}
+$('pq-next').onclick=pnext;$('pq-mode').onclick=()=>{pr=!pr;pnext();};pnext();
+
+/* IP-Helfer */
+const ip2n=s=>{const p=s.trim().split('.');if(p.length!==4||p.some(x=>!/^\d+$/.test(x)||+x>255))return null;return p.reduce((a,x)=>a*256+(+x),0)>>>0;};
+const n2ip=n=>[n>>>24,(n>>>16)&255,(n>>>8)&255,n&255].join('.');
+const maskOf=c=>c===0?0:(0xFFFFFFFF<<(32-c))>>>0;
+function sub(ip,c){const m=maskOf(c),net=(ip&m)>>>0,bc=(net|(~m>>>0))>>>0;const hosts=c>=31?(c===32?1:2):Math.pow(2,32-c)-2;return{m,net,bc,hosts,first:c>=31?net:net+1,last:c>=31?bc:bc-1};}
+
+/* Subnetting-Training */
+let tq=null,tok=0,ttot=0;const R=n=>Math.floor(Math.random()*n);
+function tnew(){const c=16+R(15);const pre=[[192,168],[10,R(256)],[172,16+R(16)]][R(3)];const ip=ip2n(pre[0]+'.'+pre[1]+'.'+R(256)+'.'+R(256));tq={ip,c,...sub(ip,c)};
+ $('tr-q').textContent=n2ip(ip)+'/'+c;['tr-n','tr-b','tr-h'].forEach(i=>$(i).value='');$('tr-out').style.display='none';}
+$('tr-check').onclick=()=>{const a=$('tr-n').value.trim()===n2ip(tq.net),b=$('tr-b').value.trim()===n2ip(tq.bc),hv=$('tr-h').value.trim(),h=hv!==''&&+hv===tq.hosts;ttot++;if(a&&b&&h)tok++;
+ $('tr-out').style.display='block';$('tr-out').innerHTML=[['Netz-ID',a],['Broadcast',b],['Hosts',h]].map(x=>'<span class="'+(x[1]?'ok-t':'bad-t')+'">'+(x[1]?'✓ ':'✗ ')+x[0]+'</span>').join(' &nbsp; ');$('tr-score').textContent=tok+' / '+ttot+' gelöst';};
+$('tr-show').onclick=()=>{$('tr-out').style.display='block';$('tr-out').innerHTML='<div class="res"><div>Subnetzmaske</div><div>'+n2ip(tq.m)+'</div><div>Netz-ID</div><div>'+n2ip(tq.net)+'</div><div>Broadcast</div><div>'+n2ip(tq.bc)+'</div><div>Hostbereich</div><div>'+n2ip(tq.first)+' – '+n2ip(tq.last)+'</div><div>Nutzbare Hosts</div><div>'+tq.hosts+'</div><div>Blockgrösse</div><div>'+Math.pow(2,32-tq.c)+' Adressen</div></div>';};
+$('tr-new').onclick=tnew;tnew();
+
+/* Subnetzrechner */
+function calc(){const v=$('sc-in').value.trim().split('/');const ip=ip2n(v[0]);const c=v[1]===undefined?24:+v[1];
+ if(ip===null||isNaN(c)||c<0||c>32){$('sc-out').innerHTML='<div>Fehler</div><div>Format: 192.168.1.10/24</div>';return;}
+ const s=sub(ip,c),o1=ip>>>24,o2=(ip>>>16)&255;const cls=o1<128?'A':o1<192?'B':o1<224?'C':o1<240?'D (Multicast)':'E';
+ const priv=o1===10||(o1===172&&o2>=16&&o2<=31)||(o1===192&&o2===168);
+ const typ=o1===127?'Loopback':priv?'Privat (RFC 1918)':(o1===169&&o2===254)?'Link-local (APIPA)':(o1===100&&o2>=64&&o2<=127)?'CGNAT (RFC 6598)':'Öffentlich';
+ $('sc-out').innerHTML=[['Subnetzmaske',n2ip(s.m)],['Wildcard',n2ip((~s.m)>>>0)],['Netz-ID',n2ip(s.net)+'/'+c],['Broadcast',n2ip(s.bc)],['Erster Host',n2ip(s.first)],['Letzter Host',n2ip(s.last)],['Nutzbare Hosts',s.hosts.toLocaleString('de-CH')],['Klasse',cls],['Typ',typ]].map(r=>'<div>'+r[0]+'</div><div>'+r[1]+'</div>').join('');}
+$('sc-in').oninput=calc;calc();
+
+/* Konverter */
+function cv(src){let n=NaN;if(src==='d')n=parseInt($('cv-d').value,10);if(src==='b')n=parseInt($('cv-b').value.replace(/\s/g,''),2);if(src==='h')n=parseInt($('cv-h').value.replace(/^0x/i,''),16);
+ if(isNaN(n)||n<0)return;if(src!=='d')$('cv-d').value=n;const bs=n.toString(2);if(src!=='b')$('cv-b').value=bs.padStart(Math.ceil(bs.length/8)*8,'0').replace(/(.{4})(?=.)/g,'$1 ');if(src!=='h')$('cv-h').value=n.toString(16).toUpperCase();}
+['d','b','h'].forEach(k=>$('cv-'+k).oninput=()=>cv(k));cv('d');
+function cvip(){const n=ip2n($('cv-ip').value);$('cv-ipb').textContent=n===null?'Ungültige Adresse':[n>>>24,(n>>>16)&255,(n>>>8)&255,n&255].map(x=>x.toString(2).padStart(8,'0')).join('.');}
+$('cv-ip').oninput=cvip;cvip();
+
+/* Notenrechner */
+function grow(g,w){const d=document.createElement('div');d.className='gr';d.innerHTML='<input type="number" step="0.1" min="1" max="6" placeholder="5.0"><input type="number" step="0.5" min="0"><button class="btn" title="Entfernen">×</button>';
+ const i=d.querySelectorAll('input');i[0].value=g;i[1].value=w;i.forEach(x=>x.oninput=gcalc);d.querySelector('button').onclick=()=>{d.remove();gcalc();};$('gr-rows').appendChild(d);}
+function gcalc(){let s=0,W=0;$('gr-rows').querySelectorAll('.gr').forEach(r=>{const i=r.querySelectorAll('input'),g=parseFloat(i[0].value),w=parseFloat(i[1].value);if(!isNaN(g)&&!isNaN(w)&&w>0){s+=g*w;W+=w;}});
+ const t=parseFloat($('gr-t').value),w=parseFloat($('gr-w').value);let h='Aktueller Schnitt: <b>'+(W?(s/W).toFixed(2):'–')+'</b>';
+ if(!isNaN(t)&&!isNaN(w)&&w>0){const need=(t*(W+w)-s)/w;h+='<br>Für einen Schnitt von '+t.toFixed(1)+' brauchst du: <b class="'+(need>6?'bad-t':'ok-t')+'">'+(need>6?'nicht erreichbar ('+need.toFixed(2)+')':need<1?'1.0 reicht':need.toFixed(2))+'</b>';}
+ $('gr-out').innerHTML=h;}
+grow(4.5,1);grow(5,1);$('gr-add').onclick=()=>grow('',1);$('gr-t').oninput=gcalc;$('gr-w').oninput=gcalc;gcalc();
+
+/* Begriff des Tages */
+const T=[["CIA-Triade","Grundlagen","Die drei Schutzziele der Informationssicherheit: Vertraulichkeit (Confidentiality), Integrität (Integrity) und Verfügbarkeit (Availability)."],
+["Defense in Depth","Grundlagen","Mehrere unabhängige Schutzschichten, damit der Ausfall einer einzelnen Massnahme nicht direkt zum Vorfall führt."],
+["Least Privilege","Zugriff","Jeder Benutzer und Prozess erhält nur die minimal nötigen Rechte für seine Aufgabe."],
+["Zero Trust","Architektur","Kein implizites Vertrauen aufgrund der Netzwerkposition. Jeder Zugriff wird einzeln authentifiziert, autorisiert und geprüft."],
+["MFA","Zugriff","Multi-Faktor-Authentifizierung kombiniert mindestens zwei Faktoren aus Wissen, Besitz und Inhärenz."],
+["RBAC","Zugriff","Role-Based Access Control: Rechte werden Rollen zugewiesen, Benutzer erhalten Rollen statt Einzelrechte."],
+["Symmetrische Verschlüsselung","Kryptografie","Gleicher Schlüssel zum Ver- und Entschlüsseln. Schnell, aber der Schlüsselaustausch ist das Problem. Beispiel: AES."],
+["Asymmetrische Verschlüsselung","Kryptografie","Schlüsselpaar aus öffentlichem und privatem Schlüssel. Löst den Schlüsselaustausch, ist aber langsamer. Beispiele: RSA, ECC."],
+["Hashfunktion","Kryptografie","Einwegfunktion, die beliebige Daten auf einen Wert fester Länge abbildet. Dient zur Integritätsprüfung. Beispiel: SHA-256."],
+["Salt","Kryptografie","Zufallswert, der vor dem Hashen an ein Passwort gehängt wird, um Rainbow-Table-Angriffe zu verhindern."],
+["PKI","Kryptografie","Public Key Infrastructure: System aus Zertifizierungsstellen, Zertifikaten und Sperrlisten, das öffentliche Schlüssel vertrauenswürdig macht."],
+["Digitale Signatur","Kryptografie","Hash einer Nachricht, signiert mit dem privaten Schlüssel des Absenders. Belegt Herkunft und Integrität."],
+["TLS-Handshake","Netzwerk","Aushandlung von Version und Cipher Suite, Prüfung des Serverzertifikats und Schlüsselaustausch, bevor verschlüsselte Daten fliessen."],
+["Perfect Forward Secrecy","Kryptografie","Sitzungsschlüssel werden pro Verbindung neu erzeugt (z.B. ECDHE). Ein später kompromittierter Langzeitschlüssel entschlüsselt alte Sitzungen nicht."],
+["Phishing","Angriffe","Täuschung per Mail, SMS oder Webseite, um Zugangsdaten zu stehlen oder Schadcode auszuführen. Spear Phishing ist gezielt auf Personen zugeschnitten."],
+["SQL Injection","Web","Ungeprüfte Eingaben werden Teil einer SQL-Abfrage. Schutz: Prepared Statements und parametrisierte Abfragen."],
+["Cross-Site Scripting (XSS)","Web","Eingeschleustes JavaScript wird im Browser anderer Benutzer ausgeführt. Schutz: Output-Encoding und Content Security Policy."],
+["CSRF","Web","Cross-Site Request Forgery: Ein angemeldeter Benutzer löst unbemerkt Aktionen aus. Schutz: CSRF-Tokens und SameSite-Cookies."],
+["Man-in-the-Middle","Angriffe","Angreifer schaltet sich zwischen zwei Kommunikationspartner, um mitzulesen oder zu manipulieren, z.B. durch ARP-Spoofing."],
+["ARP-Spoofing","Netzwerk","Gefälschte ARP-Antworten verknüpfen die MAC des Angreifers mit einer fremden IP. Grundlage für MitM im LAN."],
+["DDoS","Angriffe","Verteilter Überlastungsangriff aus vielen Quellen, der die Verfügbarkeit eines Dienstes angreift."],
+["Ransomware","Malware","Verschlüsselt Daten und fordert Lösegeld, oft kombiniert mit Datendiebstahl (Double Extortion)."],
+["Trojaner","Malware","Schadsoftware, die sich als nützliches Programm tarnt und im Hintergrund schädliche Funktionen ausführt."],
+["Zero-Day","Schwachstellen","Schwachstelle, für die noch kein Patch existiert und die bereits ausgenutzt werden kann."],
+["CVE / CVSS","Schwachstellen","CVE ist die eindeutige Kennung einer Schwachstelle, CVSS bewertet deren Schweregrad auf einer Skala von 0 bis 10."],
+["Penetrationstest","Methoden","Autorisierter, simulierter Angriff, um Schwachstellen zu finden, bevor es echte Angreifer tun."],
+["Red Team / Blue Team","Methoden","Red Team greift realistisch an, Blue Team verteidigt und erkennt. Purple Team bezeichnet die enge Zusammenarbeit beider."],
+["SIEM","Monitoring","Security Information and Event Management: Sammelt und korreliert Logs zentral, um Vorfälle zu erkennen."],
+["EDR","Monitoring","Endpoint Detection and Response: Überwacht Endgeräte auf verdächtiges Verhalten und ermöglicht Reaktion."],
+["IDS / IPS","Netzwerk","Intrusion Detection erkennt und meldet Angriffe, Intrusion Prevention blockiert sie zusätzlich aktiv."],
+["Firewall (stateful)","Netzwerk","Prüft Pakete im Kontext bestehender Verbindungen, statt jedes Paket isoliert zu betrachten."],
+["DMZ","Netzwerk","Abgetrenntes Netzsegment für öffentlich erreichbare Dienste zwischen Internet und internem Netz."],
+["VLAN","Netzwerk","Logische Trennung eines physischen Netzes in mehrere Broadcast-Domänen auf Layer 2."],
+["NAT","Netzwerk","Network Address Translation übersetzt private in öffentliche Adressen. Keine Sicherheitsfunktion, auch wenn es oft so wirkt."],
+["MITRE ATT&CK","Frameworks","Wissensbasis über Taktiken und Techniken realer Angreifer, gegliedert vom Initial Access bis zum Impact."],
+["Cyber Kill Chain","Frameworks","Lockheed-Martin-Modell der Angriffsphasen: Reconnaissance, Weaponization, Delivery, Exploitation, Installation, C2, Actions on Objectives."],
+["ISO 27001","Frameworks","Internationaler Standard für ein Informationssicherheits-Managementsystem (ISMS)."],
+["NIST CSF","Frameworks","Cybersecurity Framework mit den Funktionen Govern, Identify, Protect, Detect, Respond und Recover."],
+["Incident Response","Prozesse","Strukturierter Ablauf bei Vorfällen: Vorbereitung, Erkennung, Eindämmung, Beseitigung, Wiederherstellung und Lessons Learned."],
+["Social Engineering","Angriffe","Manipulation von Menschen statt Technik, etwa durch Vortäuschen von Autorität, Dringlichkeit oder Hilfsbereitschaft."],
+["Privilege Escalation","Angriffe","Ausweitung von Rechten nach dem Erstzugriff, vertikal zu Admin-Rechten oder horizontal zu anderen Benutzern."],
+["Lateral Movement","Angriffe","Seitliche Bewegung eines Angreifers im Netz von System zu System nach dem ersten Einbruch."]];
+const day=Math.floor((Date.now()-new Date(new Date().getFullYear(),0,0))/864e5),base=day%T.length;let off=0;
+function tshow(){const i=((base+off)%T.length+T.length)%T.length,t=T[i];$('tm-t').textContent=t[0];$('tm-c').textContent=t[1];$('tm-x').textContent=t[2];$('tm-d').textContent=off===0?'Begriff des Tages':'Begriff '+(i+1)+' von '+T.length;}
+$('tm-next').onclick=()=>{off++;tshow();};$('tm-prev').onclick=()=>{off--;tshow();};tshow();
+
+/* Befehle */
+const CMD=[["ip a","Linux","IP-Adressen und Interfaces anzeigen"],["ip route","Linux","Routing-Tabelle anzeigen"],["ss -tulpn","Linux","Offene Ports mit Prozessen anzeigen"],["sudo -l","Linux","Erlaubte sudo-Befehle des Benutzers anzeigen"],["id","Linux","Benutzer-ID und Gruppen anzeigen"],["whoami","Linux","Aktuellen Benutzer anzeigen"],["chmod 640 datei","Linux","Rechte setzen: Besitzer rw, Gruppe r, andere nichts"],["chown user:gruppe datei","Linux","Besitzer und Gruppe ändern"],["find / -perm -4000 2>/dev/null","Security","SUID-Dateien suchen (Privilege Escalation)"],["grep -ri passwort /etc","Linux","Rekursiv nach Text suchen"],["tail -f /var/log/auth.log","Security","Anmelde-Log live mitlesen"],["journalctl -u ssh","Linux","Logs eines Dienstes anzeigen"],["systemctl status dienst","Linux","Status eines Dienstes anzeigen"],["ps aux","Linux","Alle laufenden Prozesse anzeigen"],["cat /etc/passwd","Linux","Benutzerkonten auflisten"],["sha256sum datei","Security","SHA-256-Hash einer Datei berechnen"],["openssl s_client -connect host:443","Security","TLS-Verbindung und Zertifikat prüfen"],["ssh-keygen -t ed25519","Security","SSH-Schlüsselpaar erzeugen"],["ipconfig /all","Windows","Detaillierte Netzwerkkonfiguration"],["ipconfig /flushdns","Windows","DNS-Cache leeren"],["netstat -ano","Windows","Verbindungen mit Prozess-ID anzeigen"],["tasklist","Windows","Laufende Prozesse auflisten"],["whoami /priv","Windows","Rechte des aktuellen Benutzers anzeigen"],["net user","Windows","Lokale Benutzer auflisten"],["net localgroup administrators","Windows","Mitglieder der lokalen Admin-Gruppe"],["gpresult /r","Windows","Angewendete Gruppenrichtlinien anzeigen"],["Get-NetTCPConnection","Windows","TCP-Verbindungen in PowerShell"],["Get-LocalUser","Windows","Lokale Benutzer in PowerShell"],["Get-FileHash datei","Security","Datei-Hash in PowerShell (Standard SHA-256)"],["Test-NetConnection host -Port 443","Windows","Port-Erreichbarkeit testen"],["ping -c 4 host","Netzwerk","Erreichbarkeit testen (Linux/macOS, Windows: -n)"],["traceroute host","Netzwerk","Route zum Ziel anzeigen (Windows: tracert)"],["nslookup domain","Netzwerk","DNS-Abfrage"],["dig domain MX","Netzwerk","DNS-Abfrage nach bestimmtem Record-Typ"],["arp -a","Netzwerk","ARP-Tabelle anzeigen"],["curl -I https://site","Netzwerk","Nur HTTP-Header abrufen"],["nmap -sn 192.168.1.0/24","Security","Ping-Scan: aktive Hosts finden"],["nmap -sV -p- host","Security","Alle Ports scannen inkl. Dienstversionen"],["nmap -sC -sV host","Security","Standard-Skripte und Versionserkennung"],["nmap -O host","Security","Betriebssystem erkennen"],["tcpdump -i eth0 port 53","Security","DNS-Verkehr mitschneiden"],["nc -lvnp 4444","Security","Netcat-Listener auf Port 4444 starten"],["gobuster dir -u url -w liste","Security","Verzeichnisse einer Webseite enumerieren"],["hydra -l user -P liste ssh://host","Security","Passwort-Brute-Force (nur in Labs)"],["john --wordlist=liste hash.txt","Security","Hashes mit Wortliste knacken (nur in Labs)"]];
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function cm(){const q=$('cm-q').value.toLowerCase(),f=$('cm-f').value;$('cm-l').innerHTML=CMD.filter(c=>(!f||c[1]===f)&&(c[0]+' '+c[2]).toLowerCase().includes(q)).map(c=>'<div class="cmd"><code>'+esc(c[0])+'</code><span>'+c[2]+' <span class="tag">'+c[1]+'</span></span></div>').join('')||'<div class="cmd"><span>Nichts gefunden</span></div>';}
+$('cm-q').oninput=cm;$('cm-f').onchange=cm;cm();
+</script></body></html>
