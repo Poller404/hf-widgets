@@ -128,6 +128,13 @@ input,select{border:1px solid var(--line);background:var(--in);color:var(--txt);
 <section id="cmds">
  <h3>Befehle durchsuchen</h3>
  <div style="display:grid;grid-template-columns:1fr 150px;gap:8px"><input id="cm-q" placeholder="Suche, z.B. dns, port, user …"><select id="cm-f"><option value="">Alle</option><option>Linux</option><option>Windows</option><option>Netzwerk</option><option>Security</option></select></div>
+ <div class="row" style="margin-top:10px"><button class="btn p" id="cq-btn">Quiz starten</button></div>
+ <div id="cq" style="display:none;margin-top:14px">
+  <h3>Was macht dieser Befehl?</h3>
+  <div class="q" id="cq-q" style="font-size:19px;word-break:break-all"></div>
+  <div class="opts" id="cq-o"></div>
+  <div class="meta"><span id="cq-info"></span><span id="cq-score"></span></div>
+ </div>
  <div class="list" id="cm-l"></div>
 </section>
 </div>
@@ -341,4 +348,11 @@ const CMD=[["ip a","Linux","IP-Adressen und Interfaces anzeigen"],["ip route","L
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 function cm(){const q=$('cm-q').value.toLowerCase(),f=$('cm-f').value;$('cm-l').innerHTML=CMD.filter(c=>(!f||c[1]===f)&&(c[0]+' '+c[2]).toLowerCase().includes(q)).map(c=>'<div class="cmd"><code>'+esc(c[0])+'</code><span>'+c[2]+' <span class="tag">'+c[1]+'</span></span></div>').join('')||'<div class="cmd"><span>Nichts gefunden</span></div>';}
 $('cm-q').oninput=cm;$('cm-f').onchange=cm;cm();
+let qc=null,qok=0,qst=0,qlock=false;
+const qScore=()=>{let b=0;try{b=+localStorage.getItem('best_cq')||0}catch(e){}$('cq-score').textContent=qok+' richtig · Serie '+qst+' · Rekord '+b;};
+function qnext(){qlock=false;const f=$('cm-f').value,pool=CMD.filter(c=>!f||c[1]===f);qc=pool[Math.floor(Math.random()*pool.length)];$('cq-q').textContent=qc[0];$('cq-info').textContent='';$('cq-o').innerHTML='';
+ sh([qc,...sh(CMD.filter(c=>c!==qc)).slice(0,3)]).forEach(o=>{const b=document.createElement('button');b.className='opt';b.textContent=o[2];b.onclick=()=>{if(qlock)return;qlock=true;
+  if(o===qc){b.classList.add('ok');qok++;qst++;try{if(qst>(+localStorage.getItem('best_cq')||0))localStorage.setItem('best_cq',qst);}catch(e){}}else{b.classList.add('bad');qst=0;[...$('cq-o').children].forEach(x=>{if(x.textContent===qc[2])x.classList.add('ok');});}
+  $('cq-info').textContent=qc[1];qScore();setTimeout(qnext,1600);};$('cq-o').appendChild(b);});qScore();}
+$('cq-btn').onclick=()=>{const on=$('cq').style.display==='none';$('cq').style.display=on?'block':'none';$('cm-l').style.display=on?'none':'block';$('cq-btn').textContent=on?'Quiz beenden':'Quiz starten';if(on)qnext();};
 </script></body></html>
