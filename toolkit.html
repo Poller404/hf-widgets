@@ -222,14 +222,14 @@ $('jw-in').oninput=jwt;
 function hid(){const h=$('hi-in').value.trim(),o=$('hi-out');if(!h){o.style.display='none';return;}o.style.display='block';const r=[];
  if(/^\$2[abxy]?\$\d{2}\$/.test(h))r.push(['bcrypt','Passwort-Hash mit Kostenfaktor, z.B. in Webanwendungen. Hashcat-Modus 3200.']);
  else if(/^\$argon2(id|i|d)\$/.test(h))r.push(['Argon2','Moderner Passwort-Hash, Gewinner der Password Hashing Competition.']);
- else if(/^\$6\$/.test(h))r.push(['sha512crypt','Linux /etc/shadow (Standard bei vielen Distributionen). Hashcat-Modus 1800.']);
+ else if(/^\$6\$/.test(h))r.push(['sha512crypt','Linux /etc/shadow, verbreitetes Standardformat. Hashcat-Modus 1800.']);
  else if(/^\$5\$/.test(h))r.push(['sha256crypt','Linux /etc/shadow. Hashcat-Modus 7400.']);
  else if(/^\$1\$/.test(h))r.push(['md5crypt','Älteres Linux /etc/shadow-Format. Hashcat-Modus 500.']);
  else if(/^\$y\$/.test(h))r.push(['yescrypt','Linux /etc/shadow, Standard u.a. bei neueren Debian- und Ubuntu-Versionen.']);
  else if(/^[a-f0-9]+$/i.test(h)){const L2={32:[['MD5','Hashcat 0'],['NTLM','Windows-Passwort-Hash, Hashcat 1000'],['MD4','Hashcat 900']],40:[['SHA-1','Hashcat 100'],['RIPEMD-160','Hashcat 6000']],56:[['SHA-224','Hashcat 1300']],64:[['SHA-256','Hashcat 1400'],['SHA3-256','Hashcat 17400']],96:[['SHA-384','Hashcat 10800']],128:[['SHA-512','Hashcat 1700'],['SHA3-512','Hashcat 17600']]};
-  (L2[h.length]||[]).forEach(x=>r.push(x));if(!r.length)r.push(['Unbekannt','Hex-String mit '+h.length+' Zeichen passt zu keinem gängigen Hash.']);}
- else if(/^[A-Za-z0-9+/]+=*$/.test(h))r.push(['Möglicherweise Base64','Kein typischer Hash. Im Kodier-Bereich oben mit «← Base64» probieren.']);
- else r.push(['Unbekannt','Kein bekanntes Format erkannt.']);
+  (L2[h.length]||[]).forEach(x=>r.push(x));if(!r.length){o.innerHTML='Hex-String mit '+h.length+' Zeichen passt zu keinem gängigen Hash.';return;}}
+ else if(/^[A-Za-z0-9+/]+=*$/.test(h)&&h.length%4===0&&h.length>=8){o.innerHTML='Kein typischer Hash, sieht nach <b>Base64</b> aus. Oben mit «← Base64» dekodieren.';return;}
+ else{o.innerHTML='Kein bekanntes Hash-Format erkannt.';return;}
  o.innerHTML=r.map((x,i)=>(i?'':'<b>Wahrscheinlich:</b> ')+(i===1?'<br><b>Auch möglich:</b> ':i>1?', ':'')+'<b>'+x[0]+'</b> <span style="color:var(--mut)">('+x[1]+')</span>').join('');}
 $('hi-in').oninput=hid;
 
